@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, FileText, CheckCircle, Clock, Users } from "lucide-react";
+import ViewAgreementModal from "@/components/ViewAgreementModal";
 
 type Agreement = {
   id: string;
@@ -15,7 +16,7 @@ type Agreement = {
 };
 
 export default function Agreements() {
-  const [agreements] = useState<Agreement[]>([
+  const [agreements, setAgreements] = useState<Agreement[]>([
     {
       id: "1",
       title: "Sprint Communication Protocol",
@@ -47,6 +48,26 @@ export default function Agreements() {
       status: "pending",
     },
   ]);
+
+  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
+  const [signedAgreements, setSignedAgreements] = useState<Set<string>>(new Set());
+
+  const handleViewDetails = (agreement: Agreement) => {
+    setSelectedAgreement(agreement);
+  };
+
+  const handleSignAgreement = (agreementId: string) => {
+    setSignedAgreements(new Set([...signedAgreements, agreementId]));
+    setAgreements(agreements.map(a =>
+      a.id === agreementId ? { ...a, signedBy: a.signedBy + 1 } : a
+    ));
+  };
+
+  const handleSignFromModal = () => {
+    if (selectedAgreement) {
+      handleSignAgreement(selectedAgreement.id);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -116,19 +137,39 @@ export default function Agreements() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                <button
+                  onClick={() => handleViewDetails(agreement)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
                   View Details
                 </button>
-                {agreement.signedBy < agreement.totalMembers && (
-                  <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                {!signedAgreements.has(agreement.id) && agreement.signedBy < agreement.totalMembers && (
+                  <button
+                    onClick={() => handleSignAgreement(agreement.id)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
                     Sign Agreement
                   </button>
+                )}
+                {signedAgreements.has(agreement.id) && (
+                  <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-4 h-4" />
+                    Signed
+                  </div>
                 )}
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      <ViewAgreementModal
+        isOpen={selectedAgreement !== null}
+        onClose={() => setSelectedAgreement(null)}
+        agreement={selectedAgreement}
+        userSigned={selectedAgreement ? signedAgreements.has(selectedAgreement.id) : false}
+        onSign={handleSignFromModal}
+      />
     </div>
   );
 }
