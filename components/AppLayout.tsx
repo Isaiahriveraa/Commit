@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { Home, FileText, Target, BarChart3, MessageSquare, Search, Bell, User, HelpCircle } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 
@@ -185,8 +186,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-hidden">
-          {children}
+        <main className="flex-1 overflow-hidden bg-[#0A0E1A]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full overflow-y-auto"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

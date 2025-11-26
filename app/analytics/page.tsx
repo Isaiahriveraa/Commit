@@ -80,7 +80,7 @@ export default function Analytics() {
               <CartesianGrid strokeDasharray="3 3" stroke="#242938" />
               <XAxis dataKey="name" stroke="#9BA3AF" />
               <YAxis stroke="#9BA3AF" />
-              <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px', color: '#E4E6EB' }} labelStyle={{ color: '#E4E6EB' }} itemStyle={{ color: '#9BA3AF' }} />
+              <Tooltip cursor={{ fill: '#242938', opacity: 0.4 }} contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px', color: '#E4E6EB' }} labelStyle={{ color: '#E4E6EB' }} itemStyle={{ color: '#9BA3AF' }} />
               <Legend />
               <Bar dataKey="hours" fill="#3b82f6" name="Hours Allocated" />
             </BarChart>
@@ -120,7 +120,7 @@ export default function Analytics() {
             <CartesianGrid strokeDasharray="3 3" stroke="#242938" />
             <XAxis dataKey="name" stroke="#9BA3AF" />
             <YAxis stroke="#9BA3AF" />
-            <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px' }} />
+            <Tooltip cursor={{ fill: '#242938', opacity: 0.4 }} contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px' }} />
             <Legend />
             <Bar dataKey="tasks" fill="#10b981" name="Active Tasks" />
           </BarChart>
@@ -136,7 +136,7 @@ export default function Analytics() {
             <XAxis dataKey="week" stroke="#9BA3AF" />
             <YAxis yAxisId="left" orientation="left" stroke="#3b82f6" />
             <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" />
-            <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px' }} />
+            <Tooltip cursor={{ fill: '#242938', opacity: 0.4 }} contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px' }} />
             <Legend />
             <Bar yAxisId="left" dataKey="hours" fill="#3b82f6" name="Total Hours" />
             <Bar yAxisId="right" dataKey="tasks" fill="#8b5cf6" name="Total Tasks" />
