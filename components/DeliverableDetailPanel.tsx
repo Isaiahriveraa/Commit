@@ -16,9 +16,10 @@ type Deliverable = {
 type DeliverableDetailPanelProps = {
   deliverable: Deliverable;
   allDeliverables: Deliverable[];
+  onEdit: (deliverable: Deliverable) => void;
 };
 
-export default function DeliverableDetailPanel({ deliverable, allDeliverables }: DeliverableDetailPanelProps) {
+export default function DeliverableDetailPanel({ deliverable, allDeliverables, onEdit }: DeliverableDetailPanelProps) {
   const getDaysUntilDeadline = (deadline: string) => {
     const days = Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
     return days;
@@ -54,7 +55,10 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables }:
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold text-[#E4E6EB]">{deliverable.title}</h1>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-[#141824] border border-[#242938] rounded-lg text-sm text-[#9BA3AF] hover:border-blue-500/30 transition-all">
+              <button 
+                onClick={() => onEdit(deliverable)}
+                className="px-4 py-2 bg-[#141824] border border-[#242938] rounded-lg text-sm text-[#9BA3AF] hover:border-blue-500/30 transition-all"
+              >
                 Edit
               </button>
               <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-sm text-white font-medium hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-all">

@@ -68,6 +68,7 @@ export default function Deliverables() {
 
   const [selectedDeliverableId, setSelectedDeliverableId] = useState<string | null>(deliverables[0]?.id || null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
   const [filterStatus, setFilterStatus] = useState<"all" | Deliverable["status"]>("all");
 
   const handleAddDeliverable = (newDeliverable: {
@@ -76,18 +77,37 @@ export default function Deliverables() {
     owner: string;
     deadline: string;
   }) => {
-    const deliverable: Deliverable = {
-      id: String(deliverables.length + 1),
-      title: newDeliverable.title,
-      description: newDeliverable.description,
-      owner: newDeliverable.owner,
-      deadline: newDeliverable.deadline,
-      status: "upcoming",
-      progress: 0,
-    };
-    setDeliverables([deliverable, ...deliverables]);
-    setSelectedDeliverableId(deliverable.id);
+    if (editingDeliverable) {
+      setDeliverables(deliverables.map(d => 
+        d.id === editingDeliverable.id 
+          ? { ...d, ...newDeliverable }
+          : d
+      ));
+      setEditingDeliverable(null);
+    } else {
+      const deliverable: Deliverable = {
+        id: String(deliverables.length + 1),
+        title: newDeliverable.title,
+        description: newDeliverable.description,
+        owner: newDeliverable.owner,
+        deadline: newDeliverable.deadline,
+        status: "upcoming",
+        progress: 0,
+      };
+      setDeliverables([deliverable, ...deliverables]);
+      setSelectedDeliverableId(deliverable.id);
+    }
     setShowAddModal(false);
+  };
+
+  const handleEditClick = (deliverable: Deliverable) => {
+    setEditingDeliverable(deliverable);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingDeliverable(null);
   };
 
   const getDaysUntilDeadline = (deadline: string) => {
@@ -278,7 +298,11 @@ export default function Deliverables() {
       {/* Right Panel - Deliverable Detail */}
       <div className="flex-1 overflow-auto bg-[#0A0E1A]">
         {selectedDeliverable ? (
-          <DeliverableDetailPanel deliverable={selectedDeliverable} allDeliverables={deliverables} />
+          <DeliverableDetailPanel 
+            deliverable={selectedDeliverable} 
+            allDeliverables={deliverables} 
+            onEdit={handleEditClick}
+          />
         ) : (
           <div className="h-full flex items-center justify-center">
             <p className="text-[#6B7280]">Select a deliverable to view details</p>
@@ -289,8 +313,9 @@ export default function Deliverables() {
       {/* Add Modal */}
       <AddDeliverableModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={handleCloseModal}
         onSubmit={handleAddDeliverable}
+        initialData={editingDeliverable}
       />
     </div>
   );

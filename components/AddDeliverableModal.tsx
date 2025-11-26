@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 type AddDeliverableModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (deliverable: { title: string; description: string; owner: string; deadline: string }) => void;
+  initialData?: { title: string; description: string; owner: string; deadline: string } | null;
 };
 
-export default function AddDeliverableModal({ isOpen, onClose, onSubmit }: AddDeliverableModalProps) {
+export default function AddDeliverableModal({ isOpen, onClose, onSubmit, initialData }: AddDeliverableModalProps) {
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split('T')[0];
@@ -20,16 +21,26 @@ export default function AddDeliverableModal({ isOpen, onClose, onSubmit }: AddDe
   const [owner, setOwner] = useState("");
   const [deadline, setDeadline] = useState(getTodayDate());
 
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setTitle(initialData.title);
+      setDescription(initialData.description);
+      setOwner(initialData.owner);
+      setDeadline(initialData.deadline);
+    } else if (isOpen && !initialData) {
+      setTitle("");
+      setDescription("");
+      setOwner("");
+      setDeadline(getTodayDate());
+    }
+  }, [isOpen, initialData]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim() && description.trim() && owner.trim() && deadline) {
       onSubmit({ title, description, owner, deadline });
-      setTitle("");
-      setDescription("");
-      setOwner("");
-      setDeadline(getTodayDate());
       onClose();
     }
   };
@@ -38,7 +49,7 @@ export default function AddDeliverableModal({ isOpen, onClose, onSubmit }: AddDe
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-[#0A0E1A]/95 backdrop-blur-xl rounded-2xl border border-[#242938] shadow-[0_8px_40px_rgba(0,0,0,0.6)] max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-[#242938] bg-gradient-to-r from-blue-500/5 to-purple-500/5">
-          <h2 className="text-2xl font-bold text-[#E4E6EB]">Add New Deliverable</h2>
+          <h2 className="text-2xl font-bold text-[#E4E6EB]">{initialData ? "Edit Deliverable" : "Add New Deliverable"}</h2>
           <button onClick={onClose} className="text-[#9BA3AF] hover:text-[#E4E6EB] transition-colors">
             <X className="w-6 h-6" />
           </button>
