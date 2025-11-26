@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Commit
 
-## Getting Started
+A team accountability platform that helps remote and hybrid teams stay aligned through transparent commitments, deliverables tracking, and status updates.
 
-First, run the development server:
+## Features
+
+- **Team Agreements**: Create and sign shared commitments about work hours, availability, communication norms, and team values
+- **Deliverables Roadmap**: Track milestones and project deadlines with clear ownership and progress visibility
+- **Status Updates**: Post regular updates on what you're working on, creating transparency across the team
+- **Smart Notifications**: Get alerted when teammates need help, deadlines are approaching, or new agreements need signing
+- **Analytics Dashboard**: Visualize team productivity trends and accountability metrics
+
+## Tech Stack
+
+- **[Next.js 16](https://nextjs.org/)** - React framework with App Router
+- **[React 19](https://react.dev/)** - UI component library
+- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
+- **[Tailwind CSS 4](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[Lucide React](https://lucide.dev/)** - Icon library
+- **[Recharts](https://recharts.org/)** - Data visualization
+
+## Prerequisites
+
+Before running this project, make sure you have the following installed:
+
+- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
+- **npm** (comes with Node.js) or **yarn** or **pnpm** or **bun**
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd Commit
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+## Running the App
+
+### Development Mode
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The page auto-reloads when you make changes to the code.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Production Build
 
-## Learn More
+Build the app for production:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Start the production server:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm start
+```
 
-## Deploy on Vercel
+### Linting
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Run the linter to check code quality:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+```
+
+## Project Structure
+
+```
+Commit/
+├── app/                    # Next.js App Router pages
+│   ├── dashboard/         # Dashboard page
+│   ├── agreements/        # Team agreements page
+│   ├── deliverables/      # Deliverables roadmap page
+│   ├── analytics/         # Analytics page
+│   └── updates/           # Status updates page
+├── components/            # Reusable React components
+│   ├── Navbar.tsx        # Navigation bar with notifications
+│   ├── NotificationCenter.tsx
+│   ├── ViewAgreementModal.tsx
+│   ├── CreateAgreementModal.tsx
+│   └── AddDeliverableModal.tsx
+├── public/               # Static assets
+└── package.json          # Project dependencies
+```
+
+## Key Pages
+
+- **Dashboard** (`/dashboard`) - Overview of team activity and quick actions
+- **Team Agreements** (`/agreements`) - View, create, and sign team agreements
+- **Deliverables** (`/deliverables`) - Track project milestones and deadlines
+- **Analytics** (`/analytics`) - Team productivity metrics and trends
+- **Status Updates** (`/updates`) - Team member progress updates
+
+## Contributing
+
+This project was built for the Claude Builder Club Hackathon. Feel free to fork and extend it for your own use!
+
+## License
+
+MIT
