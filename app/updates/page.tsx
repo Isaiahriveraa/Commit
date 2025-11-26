@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageSquare, Heart, ThumbsUp, Send, Paperclip, Image as ImageIcon, AlertCircle } from "lucide-react";
+import PostUpdateModal from "@/components/PostUpdateModal";
 
 type Update = {
   id: string;
@@ -17,7 +18,8 @@ type Update = {
 };
 
 export default function Updates() {
-  const [updates] = useState<Update[]>([
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [updates, setUpdates] = useState<Update[]>([
     {
       id: "1",
       author: "Sarah Chen",
@@ -78,6 +80,24 @@ export default function Updates() {
     },
   ]);
 
+  const handlePostUpdate = (update: { content: string; linkedDeliverable?: string }) => {
+    const newUpdate: Update = {
+      id: String(updates.length + 1),
+      author: "You",
+      avatar: "YOU",
+      content: update.content,
+      timestamp: "Just now",
+      linkedDeliverable: update.linkedDeliverable,
+      reactions: [
+        { type: "like", count: 0 },
+        { type: "heart", count: 0 },
+      ],
+      comments: 0,
+    };
+    setUpdates([newUpdate, ...updates]);
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -85,37 +105,18 @@ export default function Updates() {
         <p className="text-gray-600 mt-2">Share progress and stay connected with your team</p>
       </div>
 
-      {/* New Update Form */}
+      {/* New Update Button */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex gap-3">
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
             YOU
           </div>
-          <div className="flex-1">
-            <textarea
-              placeholder="Share an update with your team..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows={3}
-            />
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex gap-2">
-                <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ImageIcon className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Paperclip className="w-5 h-5" />
-                </button>
-                <button className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  Request Help
-                </button>
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <Send className="w-4 h-4" />
-                Post Update
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 text-left px-4 py-3 border border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:bg-blue-50 transition-colors"
+          >
+            Share an update with your team...
+          </button>
         </div>
       </div>
 
@@ -185,6 +186,13 @@ export default function Updates() {
           </div>
         ))}
       </div>
+
+      {/* Post Update Modal */}
+      <PostUpdateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handlePostUpdate}
+      />
     </div>
   );
 }

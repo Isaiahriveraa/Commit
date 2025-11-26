@@ -10,10 +10,15 @@ type AddDeliverableModalProps = {
 };
 
 export default function AddDeliverableModal({ isOpen, onClose, onSubmit }: AddDeliverableModalProps) {
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [owner, setOwner] = useState("");
-  const [deadline, setDeadline] = useState("");
+  const [deadline, setDeadline] = useState(getTodayDate());
 
   if (!isOpen) return null;
 
@@ -24,7 +29,7 @@ export default function AddDeliverableModal({ isOpen, onClose, onSubmit }: AddDe
       setTitle("");
       setDescription("");
       setOwner("");
-      setDeadline("");
+      setDeadline(getTodayDate());
       onClose();
     }
   };
