@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Target, Calendar, User, AlertCircle, CheckCircle2 } from "lucide-react";
+import AddDeliverableModal from "@/components/AddDeliverableModal";
 
 type Deliverable = {
   id: string;
@@ -15,7 +16,7 @@ type Deliverable = {
 };
 
 export default function Deliverables() {
-  const [deliverables] = useState<Deliverable[]>([
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([
     {
       id: "1",
       title: "User Authentication System",
@@ -64,6 +65,22 @@ export default function Deliverables() {
     },
   ]);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const handleAddDeliverable = (newDeliverable: { title: string; description: string; owner: string; deadline: string }) => {
+    const deliverable: Deliverable = {
+      id: String(deliverables.length + 1),
+      title: newDeliverable.title,
+      description: newDeliverable.description,
+      owner: newDeliverable.owner,
+      deadline: newDeliverable.deadline,
+      status: "upcoming",
+      progress: 0,
+    };
+    setDeliverables([deliverable, ...deliverables]);
+    setShowAddModal(false);
+  };
+
   const getStatusColor = (status: Deliverable["status"]) => {
     switch (status) {
       case "completed":
@@ -89,7 +106,10 @@ export default function Deliverables() {
           <h1 className="text-3xl font-bold text-gray-900">Deliverables Roadmap</h1>
           <p className="text-gray-600 mt-2">Track milestones and project deadlines</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-5 h-5" />
           New Deliverable
         </button>
@@ -198,6 +218,12 @@ export default function Deliverables() {
           </div>
         </div>
       </div>
+
+      <AddDeliverableModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleAddDeliverable}
+      />
     </div>
   );
 }

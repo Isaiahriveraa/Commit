@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, FileText, CheckCircle, Clock, Users } from "lucide-react";
 import ViewAgreementModal from "@/components/ViewAgreementModal";
+import CreateAgreementModal from "@/components/CreateAgreementModal";
 
 type Agreement = {
   id: string;
@@ -51,6 +52,22 @@ export default function Agreements() {
 
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [signedAgreements, setSignedAgreements] = useState<Set<string>>(new Set());
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const handleCreateAgreement = (newAgreement: { title: string; description: string }) => {
+    const agreement: Agreement = {
+      id: String(agreements.length + 1),
+      title: newAgreement.title,
+      description: newAgreement.description,
+      createdBy: "You",
+      createdAt: new Date().toISOString().split('T')[0],
+      signedBy: 0,
+      totalMembers: 12,
+      status: "pending",
+    };
+    setAgreements([agreement, ...agreements]);
+    setShowCreateModal(false);
+  };
 
   const handleViewDetails = (agreement: Agreement) => {
     setSelectedAgreement(agreement);
@@ -76,7 +93,10 @@ export default function Agreements() {
           <h1 className="text-3xl font-bold text-gray-900">Team Agreements</h1>
           <p className="text-gray-600 mt-2">Shared commitments and expectations for the team</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-5 h-5" />
           New Agreement
         </button>
@@ -162,6 +182,12 @@ export default function Agreements() {
           </div>
         ))}
       </div>
+
+      <CreateAgreementModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateAgreement}
+      />
 
       <ViewAgreementModal
         isOpen={selectedAgreement !== null}
