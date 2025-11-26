@@ -42,8 +42,8 @@ export default function Analytics() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Workload Analytics</h1>
-        <p className="text-gray-600 mt-2">Team capacity and task distribution insights</p>
+        <h1 className="text-3xl font-bold text-[#E4E6EB]">Workload Analytics</h1>
+        <p className="text-[#9BA3AF] mt-2">Team capacity and task distribution insights</p>
       </div>
 
       {/* Stats Grid */}
@@ -51,21 +51,21 @@ export default function Analytics() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="bg-white rounded-lg shadow p-6">
+            <div key={stat.label} className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
               <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.color} p-3 rounded-lg`}>
+                <div className={`${stat.color} p-3 rounded-lg shadow-[0_0_20px_rgba(59,130,246,0.3)]`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <span
                   className={`text-sm font-medium ${
-                    stat.trend.startsWith("+") ? "text-green-600" : stat.trend.startsWith("-") ? "text-red-600" : "text-gray-600"
+                    stat.trend.startsWith("+") ? "text-green-400" : stat.trend.startsWith("-") ? "text-red-400" : "text-[#9BA3AF]"
                   }`}
                 >
                   {stat.trend}
                 </span>
               </div>
-              <p className="text-sm text-gray-600">{stat.label}</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+              <p className="text-sm text-[#9BA3AF]">{stat.label}</p>
+              <p className="text-3xl font-bold text-[#E4E6EB] mt-1">{stat.value}</p>
             </div>
           );
         })}
@@ -73,14 +73,14 @@ export default function Analytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Workload Histogram */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Workload Distribution (Hours)</h2>
+        <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
+          <h2 className="text-xl font-bold text-[#E4E6EB] mb-6">Workload Distribution (Hours)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={workloadData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#242938" />
+              <XAxis dataKey="name" stroke="#9BA3AF" />
+              <YAxis stroke="#9BA3AF" />
+              <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px', color: '#E4E6EB' }} labelStyle={{ color: '#E4E6EB' }} itemStyle={{ color: '#9BA3AF' }} />
               <Legend />
               <Bar dataKey="hours" fill="#3b82f6" name="Hours Allocated" />
             </BarChart>
@@ -88,8 +88,8 @@ export default function Analytics() {
         </div>
 
         {/* Task Status Distribution */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Task Status Distribution</h2>
+        <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-purple-500/30 hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all">
+          <h2 className="text-xl font-bold text-[#E4E6EB] mb-6">Task Status Distribution</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -106,21 +106,21 @@ export default function Analytics() {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px', color: '#E4E6EB' }} labelStyle={{ color: '#E4E6EB' }} itemStyle={{ color: '#9BA3AF' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Task Count per Person */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Task Count by Team Member</h2>
+      <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 mb-6 hover:border-emerald-500/30 hover:shadow-[0_0_40px_rgba(16,185,129,0.15)] transition-all">
+        <h2 className="text-xl font-bold text-[#E4E6EB] mb-6">Task Count by Team Member</h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={workloadData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="#242938" />
+            <XAxis dataKey="name" stroke="#9BA3AF" />
+            <YAxis stroke="#9BA3AF" />
+            <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px' }} />
             <Legend />
             <Bar dataKey="tasks" fill="#10b981" name="Active Tasks" />
           </BarChart>
@@ -128,15 +128,15 @@ export default function Analytics() {
       </div>
 
       {/* Weekly Trend */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Weekly Workload Trend</h2>
+      <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-cyan-500/30 hover:shadow-[0_0_40px_rgba(34,211,238,0.15)] transition-all">
+        <h2 className="text-xl font-bold text-[#E4E6EB] mb-6">Weekly Workload Trend</h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={weeklyTrend}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="week" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#242938" />
+            <XAxis dataKey="week" stroke="#9BA3AF" />
             <YAxis yAxisId="left" orientation="left" stroke="#3b82f6" />
             <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" />
-            <Tooltip />
+            <Tooltip contentStyle={{ backgroundColor: '#141824', border: '1px solid #242938', borderRadius: '8px' }} />
             <Legend />
             <Bar yAxisId="left" dataKey="hours" fill="#3b82f6" name="Total Hours" />
             <Bar yAxisId="right" dataKey="tasks" fill="#8b5cf6" name="Total Tasks" />
@@ -145,48 +145,48 @@ export default function Analytics() {
       </div>
 
       {/* Team Member Details Table */}
-      <div className="bg-white rounded-lg shadow p-6 mt-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Team Workload Details</h2>
+      <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 mt-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
+        <h2 className="text-xl font-bold text-[#E4E6EB] mb-4">Team Workload Details</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900">Team Member</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900">Active Tasks</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900">Hours Allocated</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900">Capacity</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900">Status</th>
+              <tr className="border-b border-[#242938]">
+                <th className="text-left py-3 px-4 text-sm font-medium text-[#E4E6EB]">Team Member</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-[#E4E6EB]">Active Tasks</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-[#E4E6EB]">Hours Allocated</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-[#E4E6EB]">Capacity</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-[#E4E6EB]">Status</th>
               </tr>
             </thead>
             <tbody>
               {workloadData.map((member, idx) => {
                 const capacity = (member.hours / 40) * 100;
                 return (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">{member.label}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{member.tasks}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{member.hours}h</td>
+                  <tr key={idx} className="border-b border-[#242938] hover:bg-[#1A1F2E] transition-colors">
+                    <td className="py-3 px-4 text-sm text-[#E4E6EB]">{member.label}</td>
+                    <td className="py-3 px-4 text-sm text-[#9BA3AF]">{member.tasks}</td>
+                    <td className="py-3 px-4 text-sm text-[#9BA3AF]">{member.hours}h</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="w-32 h-2 bg-[#1A1F2E] rounded-full overflow-hidden">
                           <div
                             className={`h-full ${
-                              capacity > 100 ? "bg-red-600" : capacity > 80 ? "bg-yellow-600" : "bg-green-600"
+                              capacity > 100 ? "bg-red-500" : capacity > 80 ? "bg-yellow-500" : "bg-green-500"
                             }`}
                             style={{ width: `${Math.min(capacity, 100)}%` }}
                           />
                         </div>
-                        <span className="text-sm text-gray-600">{capacity.toFixed(0)}%</span>
+                        <span className="text-sm text-[#9BA3AF]">{capacity.toFixed(0)}%</span>
                       </div>
                     </td>
                     <td className="py-3 px-4">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           capacity > 100
-                            ? "bg-red-100 text-red-800"
+                            ? "bg-red-500/10 text-red-400 border border-red-500/20"
                             : capacity > 80
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
+                            ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                            : "bg-green-500/10 text-green-400 border border-green-500/20"
                         }`}
                       >
                         {capacity > 100 ? "Overloaded" : capacity > 80 ? "Near Capacity" : "Available"}

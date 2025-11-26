@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, FileText, CheckCircle, Clock, Users } from "lucide-react";
-import ViewAgreementModal from "@/components/ViewAgreementModal";
+import { Plus, FileText, Search } from "lucide-react";
 import CreateAgreementModal from "@/components/CreateAgreementModal";
+import AgreementDetailPanel from "@/components/AgreementDetailPanel";
 
 type Agreement = {
   id: string;
@@ -14,6 +14,12 @@ type Agreement = {
   signedBy: number;
   totalMembers: number;
   status: "active" | "pending" | "archived";
+};
+
+type Signature = {
+  name: string;
+  signed: boolean;
+  timestamp: string | null;
 };
 
 export default function Agreements() {
@@ -50,9 +56,36 @@ export default function Agreements() {
     },
   ]);
 
-  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
+  // Mock signature data
+  const getSignatures = (agreementId: string): Signature[] => {
+    const baseSignatures = [
+      { name: "Sarah Chen", signed: true, timestamp: "2 days ago" },
+      { name: "Mike Ross", signed: true, timestamp: "2 days ago" },
+      { name: "Jessica Pearson", signed: true, timestamp: "1 day ago" },
+      { name: "Harvey Specter", signed: false, timestamp: null },
+      { name: "Rachel Zane", signed: true, timestamp: "3 hours ago" },
+      { name: "Louis Litt", signed: true, timestamp: "1 day ago" },
+      { name: "Emma Wilson", signed: true, timestamp: "5 hours ago" },
+      { name: "Alex Kim", signed: true, timestamp: "1 day ago" },
+      { name: "Jordan Lee", signed: false, timestamp: null },
+      { name: "Taylor Morgan", signed: true, timestamp: "6 hours ago" },
+      { name: "Casey Rivers", signed: false, timestamp: null },
+      { name: "Morgan Blair", signed: true, timestamp: "2 days ago" },
+    ];
+
+    const agreement = agreements.find((a) => a.id === agreementId);
+    if (!agreement) return [];
+
+    return baseSignatures.map((sig, idx) => ({
+      ...sig,
+      signed: idx < agreement.signedBy,
+    }));
+  };
+
+  const [selectedAgreementId, setSelectedAgreementId] = useState<string | null>(agreements[0]?.id || null);
   const [signedAgreements, setSignedAgreements] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "pending" | "archived">("all");
 
   const handleCreateAgreement = (newAgreement: { title: string; description: string }) => {
     const agreement: Agreement = {
@@ -60,141 +93,169 @@ export default function Agreements() {
       title: newAgreement.title,
       description: newAgreement.description,
       createdBy: "You",
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString().split("T")[0],
       signedBy: 0,
       totalMembers: 12,
       status: "pending",
     };
     setAgreements([agreement, ...agreements]);
+    setSelectedAgreementId(agreement.id);
     setShowCreateModal(false);
   };
 
-  const handleViewDetails = (agreement: Agreement) => {
-    setSelectedAgreement(agreement);
+  const handleSignAgreement = () => {
+    if (!selectedAgreementId) return;
+    setSignedAgreements(new Set([...signedAgreements, selectedAgreementId]));
+    setAgreements(
+      agreements.map((a) => (a.id === selectedAgreementId ? { ...a, signedBy: a.signedBy + 1 } : a))
+    );
   };
 
-  const handleSignAgreement = (agreementId: string) => {
-    setSignedAgreements(new Set([...signedAgreements, agreementId]));
-    setAgreements(agreements.map(a =>
-      a.id === agreementId ? { ...a, signedBy: a.signedBy + 1 } : a
-    ));
-  };
+  const filteredAgreements =
+    filterStatus === "all" ? agreements : agreements.filter((a) => a.status === filterStatus);
 
-  const handleSignFromModal = () => {
-    if (selectedAgreement) {
-      handleSignAgreement(selectedAgreement.id);
-    }
-  };
+  const selectedAgreement = agreements.find((a) => a.id === selectedAgreementId);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Team Agreements</h1>
-          <p className="text-gray-600 mt-2">Shared commitments and expectations for the team</p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          New Agreement
-        </button>
-      </div>
+    <div className="flex h-full">
+      {/* Left Panel - Agreement List */}
+      <div className="w-80 bg-[#0A0E1A] border-r border-[#242938] flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-[#242938]">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-[#E4E6EB]">Agreements</h2>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all"
+            >
+              <Plus className="w-4 h-4 text-white" />
+            </button>
+          </div>
 
-      <div className="grid gap-6">
-        {agreements.map((agreement) => (
-          <div key={agreement.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <FileText className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">{agreement.title}</h3>
-                  <p className="text-gray-600 mt-1">{agreement.description}</p>
-                </div>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  agreement.status === "active"
-                    ? "bg-green-100 text-green-800"
-                    : agreement.status === "pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-800"
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <input
+              type="text"
+              placeholder="Search agreements..."
+              className="w-full pl-9 pr-3 py-2 bg-[#141824] border border-[#242938] rounded-lg text-sm text-[#E4E6EB] placeholder-[#6B7280] focus:border-blue-500/50 focus:outline-none"
+            />
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilterStatus("all")}
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filterStatus === "all"
+                  ? "bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 border border-blue-500/20"
+                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilterStatus("active")}
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filterStatus === "active"
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+              }`}
+            >
+              Active ({agreements.filter((a) => a.status === "active").length})
+            </button>
+            <button
+              onClick={() => setFilterStatus("pending")}
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filterStatus === "pending"
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+              }`}
+            >
+              Pending ({agreements.filter((a) => a.status === "pending").length})
+            </button>
+          </div>
+        </div>
+
+        {/* Agreement List */}
+        <div className="flex-1 overflow-auto p-2">
+          {filteredAgreements.map((agreement) => {
+            const progress = Math.round((agreement.signedBy / agreement.totalMembers) * 100);
+            const isSelected = selectedAgreementId === agreement.id;
+
+            return (
+              <button
+                key={agreement.id}
+                onClick={() => setSelectedAgreementId(agreement.id)}
+                className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
+                  isSelected
+                    ? "bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]"
+                    : "border border-transparent hover:bg-[#1A1F2E] hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]"
                 }`}
               >
-                {agreement.status.charAt(0).toUpperCase() + agreement.status.slice(1)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                <span>Created by {agreement.createdBy}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{new Date(agreement.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-900">
-                      {agreement.signedBy} / {agreement.totalMembers} signed
-                    </span>
-                  </div>
-                  <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-600 transition-all"
-                      style={{ width: `${(agreement.signedBy / agreement.totalMembers) * 100}%` }}
+                <div className="flex items-start gap-2 mb-2">
+                  <div
+                    className={`p-1.5 rounded ${
+                      agreement.status === "active"
+                        ? "bg-emerald-500/10"
+                        : agreement.status === "pending"
+                        ? "bg-amber-500/10"
+                        : "bg-[#6B7280]/10"
+                    }`}
+                  >
+                    <FileText
+                      className={`w-3.5 h-3.5 ${
+                        agreement.status === "active"
+                          ? "text-emerald-400"
+                          : agreement.status === "pending"
+                          ? "text-amber-400"
+                          : "text-[#6B7280]"
+                      }`}
                     />
                   </div>
+                  <h3 className="text-sm font-semibold text-[#E4E6EB] flex-1 leading-tight">{agreement.title}</h3>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleViewDetails(agreement)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  View Details
-                </button>
-                {!signedAgreements.has(agreement.id) && agreement.signedBy < agreement.totalMembers && (
-                  <button
-                    onClick={() => handleSignAgreement(agreement.id)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Sign Agreement
-                  </button>
-                )}
-                {signedAgreements.has(agreement.id) && (
-                  <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-4 h-4" />
-                    Signed
+                <div className="pl-8">
+                  <div className="relative h-1 bg-[#1A1F2E] rounded-full overflow-hidden mb-1.5">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                      style={{ width: `${progress}%` }}
+                    />
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#6B7280]">
+                      {agreement.signedBy}/{agreement.totalMembers} signed
+                    </span>
+                    <span className="text-blue-400 font-medium">{progress}%</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
+      {/* Right Panel - Agreement Detail */}
+      <div className="flex-1 overflow-auto bg-[#0A0E1A]">
+        {selectedAgreement ? (
+          <AgreementDetailPanel
+            agreement={selectedAgreement}
+            signatures={getSignatures(selectedAgreement.id)}
+            userSigned={signedAgreements.has(selectedAgreement.id)}
+            onSign={handleSignAgreement}
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-[#6B7280]">Select an agreement to view details</p>
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
       <CreateAgreementModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateAgreement}
-      />
-
-      <ViewAgreementModal
-        isOpen={selectedAgreement !== null}
-        onClose={() => setSelectedAgreement(null)}
-        agreement={selectedAgreement}
-        userSigned={selectedAgreement ? signedAgreements.has(selectedAgreement.id) : false}
-        onSign={handleSignFromModal}
       />
     </div>
   );

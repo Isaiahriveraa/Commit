@@ -73,8 +73,8 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your projects.</p>
+        <h1 className="text-3xl font-bold text-[#E4E6EB]">Dashboard</h1>
+        <p className="text-[#9BA3AF] mt-2">Welcome back! Here's what's happening with your projects.</p>
       </div>
 
       {/* Stats Grid */}
@@ -82,13 +82,13 @@ export default function Dashboard() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="bg-white rounded-lg shadow p-6">
+            <div key={stat.label} className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className="text-sm text-[#9BA3AF]">{stat.label}</p>
+                  <p className="text-3xl font-bold text-[#E4E6EB] mt-2">{stat.value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
+                <div className={`${stat.color} p-3 rounded-lg shadow-[0_0_20px_rgba(59,130,246,0.3)]`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -99,20 +99,20 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
+        <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-purple-500/30 hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all">
+          <h2 className="text-xl font-bold text-[#E4E6EB] mb-4">Recent Activity</h2>
           <div className="space-y-4">
             {recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex items-start gap-3 pb-4 border-b last:border-b-0 last:pb-0">
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium">
+              <div key={idx} className="flex items-start gap-3 pb-4 border-b border-[#242938] last:border-b-0 last:pb-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold text-white">
                   {activity.user.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    <span className="font-medium">{activity.user}</span> {activity.action}{" "}
+                  <p className="text-sm text-[#E4E6EB]">
+                    <span className="font-medium">{activity.user}</span> <span className="text-[#9BA3AF]">{activity.action}</span>{" "}
                     <span className="font-medium">{activity.item}</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  <p className="text-xs text-[#6B7280] mt-1">{activity.time}</p>
                 </div>
               </div>
             ))}
@@ -120,36 +120,36 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
+          <h2 className="text-xl font-bold text-[#E4E6EB] mb-4">Quick Actions</h2>
           <div className="space-y-3">
             <button
               onClick={() => setActiveModal("agreement")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+              className="w-full text-left px-4 py-3 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/30 transition-all"
             >
-              <p className="font-medium text-blue-900">Create New Agreement</p>
-              <p className="text-sm text-blue-700 mt-1">Set team expectations and rules</p>
+              <p className="font-medium text-blue-400">Create New Agreement</p>
+              <p className="text-sm text-[#9BA3AF] mt-1">Set team expectations and rules</p>
             </button>
             <button
               onClick={() => setActiveModal("deliverable")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+              className="w-full text-left px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/30 transition-all"
             >
-              <p className="font-medium text-green-900">Add Deliverable</p>
-              <p className="text-sm text-green-700 mt-1">Track new milestone or deadline</p>
+              <p className="font-medium text-emerald-400">Add Deliverable</p>
+              <p className="text-sm text-[#9BA3AF] mt-1">Track new milestone or deadline</p>
             </button>
             <button
               onClick={() => setActiveModal("update")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors"
+              className="w-full text-left px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/30 transition-all"
             >
-              <p className="font-medium text-purple-900">Post Status Update</p>
-              <p className="text-sm text-purple-700 mt-1">Share your progress with the team</p>
+              <p className="font-medium text-purple-400">Post Status Update</p>
+              <p className="text-sm text-[#9BA3AF] mt-1">Share your progress with the team</p>
             </button>
             <button
               onClick={() => setActiveModal("help")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
+              className="w-full text-left px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 transition-all"
             >
-              <p className="font-medium text-red-900">Request Help</p>
-              <p className="text-sm text-red-700 mt-1">Alert team members you need support</p>
+              <p className="font-medium text-red-400">Request Help</p>
+              <p className="text-sm text-[#9BA3AF] mt-1">Alert team members you need support</p>
             </button>
           </div>
         </div>

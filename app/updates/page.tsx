@@ -101,19 +101,19 @@ export default function Updates() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Status Updates</h1>
-        <p className="text-gray-600 mt-2">Share progress and stay connected with your team</p>
+        <h1 className="text-3xl font-bold text-[#E4E6EB]">Status Updates</h1>
+        <p className="text-[#9BA3AF] mt-2">Share progress and stay connected with your team</p>
       </div>
 
       {/* New Update Button */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 mb-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
         <div className="flex gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
             YOU
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex-1 text-left px-4 py-3 border border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            className="flex-1 text-left px-4 py-3 border border-[#242938] rounded-lg text-[#6B7280] hover:border-blue-500/30 hover:bg-blue-500/5 transition-all"
           >
             Share an update with your team...
           </button>
@@ -125,38 +125,38 @@ export default function Updates() {
         {updates.map((update) => (
           <div
             key={update.id}
-            className={`bg-white rounded-lg shadow p-6 ${update.isHelpRequest ? "border-l-4 border-red-500" : ""}`}
+            className={`bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-purple-500/30 hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all ${update.isHelpRequest ? "border-l-4 border-l-red-500" : ""}`}
           >
             {/* Header */}
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
                 {update.avatar}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-900">{update.author}</h3>
+                  <h3 className="font-semibold text-[#E4E6EB]">{update.author}</h3>
                   {update.isHelpRequest && (
-                    <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded-full flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-red-500/10 text-red-400 text-xs font-medium rounded-full flex items-center gap-1 border border-red-500/20">
                       <AlertCircle className="w-3 h-3" />
                       Help Requested
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">{update.timestamp}</p>
+                <p className="text-sm text-[#6B7280]">{update.timestamp}</p>
                 {update.linkedDeliverable && (
-                  <p className="text-sm text-blue-600 mt-1">→ {update.linkedDeliverable}</p>
+                  <p className="text-sm text-blue-400 mt-1">→ {update.linkedDeliverable}</p>
                 )}
               </div>
             </div>
 
             {/* Content */}
-            <p className="text-gray-900 mb-4">{update.content}</p>
+            <p className="text-[#E4E6EB] mb-4">{update.content}</p>
 
             {/* Attachments */}
             {update.attachments && update.attachments.length > 0 && (
               <div className="mb-4">
                 {update.attachments.map((attachment, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+                  <div key={idx} className="flex items-center gap-2 text-sm text-[#9BA3AF] bg-[#1A1F2E] px-3 py-2 rounded-lg border border-[#242938]">
                     {attachment.type === "image" ? <ImageIcon className="w-4 h-4" /> : <Paperclip className="w-4 h-4" />}
                     <span>{attachment.name}</span>
                   </div>
@@ -165,20 +165,20 @@ export default function Updates() {
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-6 pt-4 border-t border-gray-200">
-              <button className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors">
+            <div className="flex items-center gap-6 pt-4 border-t border-[#242938]">
+              <button className="flex items-center gap-2 text-[#9BA3AF] hover:text-blue-400 transition-colors">
                 <ThumbsUp className="w-4 h-4" />
                 <span className="text-sm font-medium">
                   {update.reactions.find((r) => r.type === "like")?.count || 0}
                 </span>
               </button>
-              <button className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors">
+              <button className="flex items-center gap-2 text-[#9BA3AF] hover:text-red-400 transition-colors">
                 <Heart className="w-4 h-4" />
                 <span className="text-sm font-medium">
                   {update.reactions.find((r) => r.type === "heart")?.count || 0}
                 </span>
               </button>
-              <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+              <button className="flex items-center gap-2 text-[#9BA3AF] hover:text-[#E4E6EB] transition-colors">
                 <MessageSquare className="w-4 h-4" />
                 <span className="text-sm font-medium">{update.comments} comments</span>
               </button>

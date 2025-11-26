@@ -26,35 +26,35 @@ export default function CreateAgreementModal({ isOpen, onClose, onSubmit }: Crea
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-300 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Create New Agreement</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-[#0A0E1A]/95 backdrop-blur-xl rounded-2xl border border-[#242938] shadow-[0_8px_40px_rgba(0,0,0,0.6)] max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-[#242938] bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+          <h2 className="text-2xl font-bold text-[#E4E6EB]">Create New Agreement</h2>
+          <button onClick={onClose} className="text-[#9BA3AF] hover:text-[#E4E6EB] transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-900 mb-2">Agreement Title</label>
+            <label className="block text-sm font-medium text-[#E4E6EB] mb-2">Agreement Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Daily Standup Attendance"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="w-full px-4 py-3 bg-[#141824] border border-[#242938] rounded-lg text-[#E4E6EB] placeholder-[#6B7280] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_20px_rgba(59,130,246,0.2)] outline-none transition-all"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
+            <label className="block text-sm font-medium text-[#E4E6EB] mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the expectations and rules for this agreement..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900"
+              className="w-full px-4 py-3 bg-[#141824] border border-[#242938] rounded-lg text-[#E4E6EB] placeholder-[#6B7280] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_20px_rgba(59,130,246,0.2)] outline-none transition-all resize-none"
               rows={4}
               required
             />
@@ -64,13 +64,13 @@ export default function CreateAgreementModal({ isOpen, onClose, onSubmit }: Crea
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 text-[#9BA3AF] bg-[#141824] border border-[#242938] rounded-lg hover:bg-[#1A1F2E] hover:text-[#E4E6EB] transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white font-medium hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-all"
             >
               Create Agreement
             </button>
