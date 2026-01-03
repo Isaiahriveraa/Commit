@@ -30,13 +30,13 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables, o
   const getStatusInfo = (status: Deliverable["status"]) => {
     switch (status) {
       case "completed":
-        return { icon: CheckCircle2, color: "emerald", label: "Completed" };
+        return { icon: CheckCircle2, colorClass: "success", label: "Completed" };
       case "in-progress":
-        return { icon: Target, color: "blue", label: "In Progress" };
+        return { icon: Target, colorClass: "info", label: "In Progress" };
       case "at-risk":
-        return { icon: AlertCircle, color: "red", label: "At Risk" };
+        return { icon: AlertCircle, colorClass: "error", label: "At Risk" };
       case "upcoming":
-        return { icon: Clock, color: "gray", label: "Upcoming" };
+        return { icon: Clock, colorClass: "muted", label: "Upcoming" };
     }
   };
 
@@ -53,53 +53,53 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables, o
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
-            <h1 className="text-3xl font-bold text-[#E4E6EB]">{deliverable.title}</h1>
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">{deliverable.title}</h1>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => onEdit(deliverable)}
-                className="px-4 py-2 bg-[#141824] border border-[#242938] rounded-lg text-sm text-[#9BA3AF] hover:border-blue-500/30 transition-all"
+                className="px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all"
               >
                 Edit
               </button>
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-sm text-white font-medium hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-all">
+              <button className="px-4 py-2 bg-[var(--color-primary)] rounded-lg text-sm text-white font-medium hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]">
                 Update Progress
               </button>
             </div>
           </div>
 
           <div className="flex items-center gap-4 text-sm flex-wrap">
-            <div className="flex items-center gap-1.5 text-[#9BA3AF]">
+            <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
               <User className="w-4 h-4" />
-              <span>Owner: <span className="text-[#E4E6EB] font-medium">{deliverable.owner}</span></span>
+              <span>Owner: <span className="text-[var(--color-text-primary)] font-medium">{deliverable.owner}</span></span>
             </div>
-            <span className="text-[#6B7280]">•</span>
-            <div className="flex items-center gap-1.5 text-[#9BA3AF]">
+            <span className="text-[var(--color-text-muted)]">•</span>
+            <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
               <Calendar className="w-4 h-4" />
               <span>{new Date(deliverable.deadline).toLocaleDateString()}</span>
               {deliverable.status !== "completed" && (
                 <span
-                  className={`ml-1 ${
+                  className={`ml-1 font-medium ${
                     daysUntil < 0
-                      ? "text-red-400 font-medium"
+                      ? "text-[var(--color-error)]"
                       : daysUntil <= 3
-                      ? "text-amber-400 font-medium"
-                      : "text-[#9BA3AF]"
+                      ? "text-[var(--color-warning)]"
+                      : "text-[var(--color-text-secondary)]"
                   }`}
                 >
                   ({daysUntil < 0 ? `${Math.abs(daysUntil)} days overdue` : `${daysUntil} days left`})
                 </span>
               )}
             </div>
-            <span className="text-[#6B7280]">•</span>
+            <span className="text-[var(--color-text-muted)]">•</span>
             <span
-              className={`px-2 py-0.5 text-xs font-medium rounded flex items-center gap-1.5 ${
-                statusInfo.color === "emerald"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : statusInfo.color === "blue"
-                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  : statusInfo.color === "red"
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                  : "bg-[#6B7280]/10 text-[#6B7280] border border-[#6B7280]/20"
+              className={`px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1.5 ${
+                statusInfo.colorClass === "success"
+                  ? "bg-[var(--color-success-light)] text-[var(--color-success)]"
+                  : statusInfo.colorClass === "info"
+                  ? "bg-[var(--color-info-light)] text-[var(--color-info)]"
+                  : statusInfo.colorClass === "error"
+                  ? "bg-[var(--color-error-light)] text-[var(--color-error)]"
+                  : "bg-[var(--color-surface-alt)] text-[var(--color-text-muted)]"
               }`}
             >
               <StatusIcon className="w-3 h-3" />
@@ -109,25 +109,25 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables, o
         </div>
 
         {/* Description */}
-        <div className="mb-8 p-6 bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938]">
-          <h3 className="text-sm font-semibold text-[#E4E6EB] mb-3">Description</h3>
-          <p className="text-[#9BA3AF] leading-relaxed">{deliverable.description}</p>
+        <div className="mb-8 p-6 card">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">Description</h3>
+          <p className="text-[var(--color-text-secondary)] leading-relaxed">{deliverable.description}</p>
         </div>
 
         {/* Progress */}
-        <div className="mb-8 p-6 bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938]">
+        <div className="mb-8 p-6 card">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-[#E4E6EB]">Progress</h3>
-            <span className="text-lg font-bold text-blue-400">{deliverable.progress}%</span>
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Progress</h3>
+            <span className="text-lg font-bold text-[var(--color-primary)]">{deliverable.progress}%</span>
           </div>
-          <div className="relative h-3 bg-[#1A1F2E] rounded-full overflow-hidden">
+          <div className="relative h-3 bg-[var(--color-surface-alt)] rounded-full overflow-hidden">
             <div
-              className={`absolute inset-y-0 left-0 rounded-full ${
+              className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${
                 deliverable.status === "completed"
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                  ? "bg-[var(--color-success)]"
                   : deliverable.status === "at-risk"
-                  ? "bg-gradient-to-r from-red-500 to-orange-400 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
-                  : "bg-gradient-to-r from-blue-500 to-cyan-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                  ? "bg-[var(--color-error)]"
+                  : "bg-[var(--color-primary)]"
               }`}
               style={{ width: `${deliverable.progress}%` }}
             />
@@ -136,8 +136,8 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables, o
 
         {/* Dependencies */}
         {dependentDeliverables.length > 0 && (
-          <div className="mb-8 p-6 bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938]">
-            <h3 className="text-sm font-semibold text-[#E4E6EB] mb-4">Dependencies ({dependentDeliverables.length})</h3>
+          <div className="mb-8 p-6 card">
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Dependencies ({dependentDeliverables.length})</h3>
             <div className="space-y-3">
               {dependentDeliverables.map((dep) => {
                 const depStatusInfo = getStatusInfo(dep.status);
@@ -146,38 +146,38 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables, o
                 return (
                   <div
                     key={dep.id}
-                    className="flex items-center justify-between p-3 bg-[#1A1F2E] rounded-lg border border-[#242938]"
+                    className="flex items-center justify-between p-3 bg-[var(--color-surface-alt)] rounded-lg border border-[var(--color-border)]"
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <div
                         className={`p-2 rounded-lg ${
-                          depStatusInfo.color === "emerald"
-                            ? "bg-emerald-500/10"
-                            : depStatusInfo.color === "blue"
-                            ? "bg-blue-500/10"
-                            : depStatusInfo.color === "red"
-                            ? "bg-red-500/10"
-                            : "bg-[#6B7280]/10"
+                          depStatusInfo.colorClass === "success"
+                            ? "bg-[var(--color-success-light)]"
+                            : depStatusInfo.colorClass === "info"
+                            ? "bg-[var(--color-info-light)]"
+                            : depStatusInfo.colorClass === "error"
+                            ? "bg-[var(--color-error-light)]"
+                            : "bg-[var(--color-surface-hover)]"
                         }`}
                       >
                         <DepIcon
                           className={`w-4 h-4 ${
-                            depStatusInfo.color === "emerald"
-                              ? "text-emerald-400"
-                              : depStatusInfo.color === "blue"
-                              ? "text-blue-400"
-                              : depStatusInfo.color === "red"
-                              ? "text-red-400"
-                              : "text-[#6B7280]"
+                            depStatusInfo.colorClass === "success"
+                              ? "text-[var(--color-success)]"
+                              : depStatusInfo.colorClass === "info"
+                              ? "text-[var(--color-info)]"
+                              : depStatusInfo.colorClass === "error"
+                              ? "text-[var(--color-error)]"
+                              : "text-[var(--color-text-muted)]"
                           }`}
                         />
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-[#E4E6EB]">{dep.title}</h4>
-                        <p className="text-xs text-[#6B7280] mt-0.5">{dep.owner}</p>
+                        <h4 className="text-sm font-medium text-[var(--color-text-primary)]">{dep.title}</h4>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{dep.owner}</p>
                       </div>
                     </div>
-                    <div className="text-xs font-medium text-[#9BA3AF]">{dep.progress}%</div>
+                    <div className="text-xs font-medium text-[var(--color-text-secondary)]">{dep.progress}%</div>
                   </div>
                 );
               })}
@@ -186,32 +186,32 @@ export default function DeliverableDetailPanel({ deliverable, allDeliverables, o
         )}
 
         {/* Timeline */}
-        <div className="p-6 bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938]">
-          <h3 className="text-sm font-semibold text-[#E4E6EB] mb-4">Timeline</h3>
+        <div className="p-6 card">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Timeline</h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-[var(--color-info)] mt-1.5" />
               <div className="flex-1">
-                <div className="text-sm text-[#E4E6EB] font-medium">Created</div>
-                <div className="text-xs text-[#6B7280] mt-0.5">Nov 20, 2024</div>
+                <div className="text-sm text-[var(--color-text-primary)] font-medium">Created</div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-0.5">Nov 20, 2024</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5" />
+              <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] mt-1.5" />
               <div className="flex-1">
-                <div className="text-sm text-[#E4E6EB] font-medium">Last Updated</div>
-                <div className="text-xs text-[#6B7280] mt-0.5">2 hours ago</div>
+                <div className="text-sm text-[var(--color-text-primary)] font-medium">Last Updated</div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-0.5">2 hours ago</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <div
                 className={`w-2 h-2 rounded-full mt-1.5 ${
-                  deliverable.status === "completed" ? "bg-emerald-400" : "bg-[#6B7280]"
+                  deliverable.status === "completed" ? "bg-[var(--color-success)]" : "bg-[var(--color-text-muted)]"
                 }`}
               />
               <div className="flex-1">
-                <div className="text-sm text-[#E4E6EB] font-medium">Deadline</div>
-                <div className="text-xs text-[#6B7280] mt-0.5">{new Date(deliverable.deadline).toLocaleDateString()}</div>
+                <div className="text-sm text-[var(--color-text-primary)] font-medium">Deadline</div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{new Date(deliverable.deadline).toLocaleDateString()}</div>
               </div>
             </div>
           </div>
