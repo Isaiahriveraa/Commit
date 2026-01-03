@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Target, Search, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Plus, Target, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import AddDeliverableModal from "@/components/AddDeliverableModal";
 import DeliverableDetailPanel from "@/components/DeliverableDetailPanel";
 
@@ -78,8 +78,8 @@ export default function Deliverables() {
     deadline: string;
   }) => {
     if (editingDeliverable) {
-      setDeliverables(deliverables.map(d => 
-        d.id === editingDeliverable.id 
+      setDeliverables(deliverables.map(d =>
+        d.id === editingDeliverable.id
           ? { ...d, ...newDeliverable }
           : d
       ));
@@ -134,14 +134,14 @@ export default function Deliverables() {
   return (
     <div className="flex h-full">
       {/* Left Panel - Deliverable List */}
-      <div className="w-80 bg-[#0A0E1A] border-r border-[#242938] flex flex-col">
+      <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-[#242938]">
+        <div className="p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#E4E6EB]">Deliverables</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Deliverables</h2>
             <button
               onClick={() => setShowAddModal(true)}
-              className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all"
+              className="p-2 bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]"
             >
               <Plus className="w-4 h-4 text-white" />
             </button>
@@ -149,11 +149,11 @@ export default function Deliverables() {
 
           {/* Search */}
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
             <input
               type="text"
               placeholder="Search deliverables..."
-              className="w-full pl-9 pr-3 py-2 bg-[#141824] border border-[#242938] rounded-lg text-sm text-[#E4E6EB] placeholder-[#6B7280] focus:border-blue-500/50 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-border-focus)] focus:outline-none transition-colors"
             />
           </div>
 
@@ -163,8 +163,8 @@ export default function Deliverables() {
               onClick={() => setFilterStatus("all")}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "all"
-                  ? "bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 border border-blue-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               All
@@ -173,8 +173,8 @@ export default function Deliverables() {
               onClick={() => setFilterStatus("in-progress")}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "in-progress"
-                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-info-light)] text-[var(--color-info)] border border-[var(--color-info)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               In Progress
@@ -183,8 +183,8 @@ export default function Deliverables() {
               onClick={() => setFilterStatus("at-risk")}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "at-risk"
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-error-light)] text-[var(--color-error)] border border-[var(--color-error)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               At Risk
@@ -193,8 +193,8 @@ export default function Deliverables() {
               onClick={() => setFilterStatus("completed")}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "completed"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-success-light)] text-[var(--color-success)] border border-[var(--color-success)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               Completed
@@ -215,74 +215,74 @@ export default function Deliverables() {
                 <button
                   key={deliverable.id}
                   onClick={() => setSelectedDeliverableId(deliverable.id)}
-                  className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
+                  className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
                     isSelected
-                      ? "bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]"
-                      : "border border-transparent hover:bg-[#1A1F2E] hover:border-cyan-500/20 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
+                      ? "bg-[var(--color-primary-light)] border border-[var(--color-primary)] shadow-[var(--shadow-md)]"
+                      : "border border-transparent hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border)]"
                   }`}
                 >
                   <div className="flex items-start gap-2 mb-2">
                     <div
-                      className={`p-1.5 rounded ${
+                      className={`p-1.5 rounded-lg ${
                         deliverable.status === "completed"
-                          ? "bg-emerald-500/10"
+                          ? "bg-[var(--color-success-light)]"
                           : deliverable.status === "at-risk"
-                          ? "bg-red-500/10"
+                          ? "bg-[var(--color-error-light)]"
                           : deliverable.status === "in-progress"
-                          ? "bg-blue-500/10"
-                          : "bg-[#6B7280]/10"
+                          ? "bg-[var(--color-info-light)]"
+                          : "bg-[var(--color-surface-alt)]"
                       }`}
                     >
                       <StatusIcon
                         className={`w-3.5 h-3.5 ${
                           deliverable.status === "completed"
-                            ? "text-emerald-400"
+                            ? "text-[var(--color-success)]"
                             : deliverable.status === "at-risk"
-                            ? "text-red-400"
+                            ? "text-[var(--color-error)]"
                             : deliverable.status === "in-progress"
-                            ? "text-blue-400"
-                            : "text-[#6B7280]"
+                            ? "text-[var(--color-info)]"
+                            : "text-[var(--color-text-muted)]"
                         }`}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-[#E4E6EB] leading-tight truncate">{deliverable.title}</h3>
-                      <p className="text-xs text-[#6B7280] mt-0.5">{deliverable.owner}</p>
+                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] leading-tight truncate">{deliverable.title}</h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{deliverable.owner}</p>
                     </div>
                   </div>
                   <div className="pl-8">
                     {deliverable.status !== "completed" && (
-                      <div className="text-xs text-[#6B7280] mb-1.5">
+                      <div className="text-xs text-[var(--color-text-muted)] mb-1.5">
                         <span
                           className={
-                            daysUntil < 0 ? "text-red-400" : daysUntil <= 3 ? "text-amber-400" : "text-[#6B7280]"
+                            daysUntil < 0 ? "text-[var(--color-error)]" : daysUntil <= 3 ? "text-[var(--color-warning)]" : "text-[var(--color-text-muted)]"
                           }
                         >
                           {daysUntil < 0 ? `${Math.abs(daysUntil)}d overdue` : `${daysUntil}d left`}
                         </span>
                       </div>
                     )}
-                    <div className="relative h-1 bg-[#1A1F2E] rounded-full overflow-hidden mb-1.5">
+                    <div className="relative h-1.5 bg-[var(--color-surface-alt)] rounded-full overflow-hidden mb-1.5">
                       <div
-                        className={`absolute inset-y-0 left-0 rounded-full ${
+                        className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${
                           deliverable.status === "completed"
-                            ? "bg-gradient-to-r from-emerald-500 to-teal-400"
+                            ? "bg-[var(--color-success)]"
                             : deliverable.status === "at-risk"
-                            ? "bg-gradient-to-r from-red-500 to-orange-400"
-                            : "bg-gradient-to-r from-blue-500 to-cyan-400"
+                            ? "bg-[var(--color-error)]"
+                            : "bg-[var(--color-primary)]"
                         }`}
                         style={{ width: `${deliverable.progress}%` }}
                       />
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-[#6B7280]">Progress</span>
+                      <span className="text-[var(--color-text-muted)]">Progress</span>
                       <span
                         className={`font-medium ${
                           deliverable.status === "completed"
-                            ? "text-emerald-400"
+                            ? "text-[var(--color-success)]"
                             : deliverable.status === "at-risk"
-                            ? "text-red-400"
-                            : "text-blue-400"
+                            ? "text-[var(--color-error)]"
+                            : "text-[var(--color-primary)]"
                         }`}
                       >
                         {deliverable.progress}%
@@ -296,16 +296,16 @@ export default function Deliverables() {
       </div>
 
       {/* Right Panel - Deliverable Detail */}
-      <div className="flex-1 overflow-auto bg-[#0A0E1A]">
+      <div className="flex-1 overflow-auto bg-[var(--color-bg)]">
         {selectedDeliverable ? (
-          <DeliverableDetailPanel 
-            deliverable={selectedDeliverable} 
-            allDeliverables={deliverables} 
+          <DeliverableDetailPanel
+            deliverable={selectedDeliverable}
+            allDeliverables={deliverables}
             onEdit={handleEditClick}
           />
         ) : (
           <div className="h-full flex items-center justify-center">
-            <p className="text-[#6B7280]">Select a deliverable to view details</p>
+            <p className="text-[var(--color-text-muted)]">Select a deliverable to view details</p>
           </div>
         )}
       </div>

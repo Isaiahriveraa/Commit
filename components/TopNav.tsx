@@ -80,7 +80,7 @@ export default function TopNav() {
         </Link>
 
         {/* Navigation Tabs - Center */}
-        <div className="flex items-center gap-1 bg-[var(--color-bg)] rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-[var(--color-surface-alt)] rounded-lg p-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -89,7 +89,7 @@ export default function TopNav() {
                 href={item.href}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-[var(--transition-fast)] ${
                   isActive
-                    ? 'bg-[var(--color-surface-light)] text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-[var(--shadow-sm)]'
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
@@ -122,7 +122,7 @@ export default function TopNav() {
             >
               <Bell className="w-5 h-5 text-[var(--color-text-secondary)]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-secondary)] rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-primary)] rounded-full text-[10px] font-bold flex items-center justify-center text-white">
                   {unreadCount}
                 </span>
               )}

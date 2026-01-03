@@ -119,14 +119,14 @@ export default function Agreements() {
   return (
     <div className="flex h-full">
       {/* Left Panel - Agreement List */}
-      <div className="w-80 bg-[#0A0E1A] border-r border-[#242938] flex flex-col">
+      <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-[#242938]">
+        <div className="p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#E4E6EB]">Agreements</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Agreements</h2>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all"
+              className="p-2 bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]"
             >
               <Plus className="w-4 h-4 text-white" />
             </button>
@@ -134,11 +134,11 @@ export default function Agreements() {
 
           {/* Search */}
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
             <input
               type="text"
               placeholder="Search agreements..."
-              className="w-full pl-9 pr-3 py-2 bg-[#141824] border border-[#242938] rounded-lg text-sm text-[#E4E6EB] placeholder-[#6B7280] focus:border-blue-500/50 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-border-focus)] focus:outline-none transition-colors"
             />
           </div>
 
@@ -148,8 +148,8 @@ export default function Agreements() {
               onClick={() => setFilterStatus("all")}
               className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "all"
-                  ? "bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 border border-blue-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               All
@@ -158,8 +158,8 @@ export default function Agreements() {
               onClick={() => setFilterStatus("active")}
               className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "active"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-success-light)] text-[var(--color-success)] border border-[var(--color-success)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               Active ({agreements.filter((a) => a.status === "active").length})
@@ -168,8 +168,8 @@ export default function Agreements() {
               onClick={() => setFilterStatus("pending")}
               className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "pending"
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                  : "text-[#9BA3AF] hover:bg-[#1A1F2E]"
+                  ? "bg-[var(--color-warning-light)] text-[var(--color-warning)] border border-[var(--color-warning)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               Pending ({agreements.filter((a) => a.status === "pending").length})
@@ -187,46 +187,46 @@ export default function Agreements() {
               <button
                 key={agreement.id}
                 onClick={() => setSelectedAgreementId(agreement.id)}
-                className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
+                className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
                   isSelected
-                    ? "bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]"
-                    : "border border-transparent hover:bg-[#1A1F2E] hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.1)]"
+                    ? "bg-[var(--color-primary-light)] border border-[var(--color-primary)] shadow-[var(--shadow-md)]"
+                    : "border border-transparent hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border)]"
                 }`}
               >
                 <div className="flex items-start gap-2 mb-2">
                   <div
-                    className={`p-1.5 rounded ${
+                    className={`p-1.5 rounded-lg ${
                       agreement.status === "active"
-                        ? "bg-emerald-500/10"
+                        ? "bg-[var(--color-success-light)]"
                         : agreement.status === "pending"
-                        ? "bg-amber-500/10"
-                        : "bg-[#6B7280]/10"
+                        ? "bg-[var(--color-warning-light)]"
+                        : "bg-[var(--color-surface-alt)]"
                     }`}
                   >
                     <FileText
                       className={`w-3.5 h-3.5 ${
                         agreement.status === "active"
-                          ? "text-emerald-400"
+                          ? "text-[var(--color-success)]"
                           : agreement.status === "pending"
-                          ? "text-amber-400"
-                          : "text-[#6B7280]"
+                          ? "text-[var(--color-warning)]"
+                          : "text-[var(--color-text-muted)]"
                       }`}
                     />
                   </div>
-                  <h3 className="text-sm font-semibold text-[#E4E6EB] flex-1 leading-tight">{agreement.title}</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)] flex-1 leading-tight">{agreement.title}</h3>
                 </div>
                 <div className="pl-8">
-                  <div className="relative h-1 bg-[#1A1F2E] rounded-full overflow-hidden mb-1.5">
+                  <div className="relative h-1.5 bg-[var(--color-surface-alt)] rounded-full overflow-hidden mb-1.5">
                     <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                      className="absolute inset-y-0 left-0 bg-[var(--color-primary)] rounded-full transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#6B7280]">
+                    <span className="text-[var(--color-text-muted)]">
                       {agreement.signedBy}/{agreement.totalMembers} signed
                     </span>
-                    <span className="text-blue-400 font-medium">{progress}%</span>
+                    <span className="text-[var(--color-primary)] font-medium">{progress}%</span>
                   </div>
                 </div>
               </button>
@@ -236,7 +236,7 @@ export default function Agreements() {
       </div>
 
       {/* Right Panel - Agreement Detail */}
-      <div className="flex-1 overflow-auto bg-[#0A0E1A]">
+      <div className="flex-1 overflow-auto bg-[var(--color-bg)]">
         {selectedAgreement ? (
           <AgreementDetailPanel
             agreement={selectedAgreement}
@@ -246,7 +246,7 @@ export default function Agreements() {
           />
         ) : (
           <div className="h-full flex items-center justify-center">
-            <p className="text-[#6B7280]">Select an agreement to view details</p>
+            <p className="text-[var(--color-text-muted)]">Select an agreement to view details</p>
           </div>
         )}
       </div>

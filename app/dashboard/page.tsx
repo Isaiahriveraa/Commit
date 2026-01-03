@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, Target, Users, Clock } from "lucide-react";
+import { BarChart3, Target, Users, Clock, Plus, MessageSquare, HelpCircle, FileText } from "lucide-react";
 import CreateAgreementModal from "@/components/CreateAgreementModal";
 import AddDeliverableModal from "@/components/AddDeliverableModal";
 import PostUpdateModal from "@/components/PostUpdateModal";
@@ -24,10 +24,49 @@ export default function Dashboard() {
   ]);
 
   const stats = [
-    { label: "Active Projects", value: "3", icon: Target, color: "bg-blue-500" },
-    { label: "Team Members", value: "12", icon: Users, color: "bg-green-500" },
-    { label: "Pending Tasks", value: "24", icon: Clock, color: "bg-yellow-500" },
-    { label: "Completion Rate", value: "78%", icon: BarChart3, color: "bg-purple-500" },
+    { label: "Active Projects", value: "3", icon: Target, bgColor: "bg-[var(--color-primary-light)]", iconColor: "text-[var(--color-primary)]" },
+    { label: "Team Members", value: "12", icon: Users, bgColor: "bg-[var(--color-success-light)]", iconColor: "text-[var(--color-success)]" },
+    { label: "Pending Tasks", value: "24", icon: Clock, bgColor: "bg-[var(--color-warning-light)]", iconColor: "text-[var(--color-warning)]" },
+    { label: "Completion Rate", value: "78%", icon: BarChart3, bgColor: "bg-[var(--color-info-light)]", iconColor: "text-[var(--color-info)]" },
+  ];
+
+  const quickActions = [
+    { 
+      label: "New Agreement", 
+      description: "Set team expectations and rules",
+      icon: FileText, 
+      modal: "agreement" as const,
+      color: "text-[var(--color-primary)]",
+      bgColor: "bg-[var(--color-primary-light)]",
+      hoverBg: "hover:bg-[var(--color-primary)]",
+    },
+    { 
+      label: "Add Deliverable", 
+      description: "Track new milestone or deadline",
+      icon: Plus, 
+      modal: "deliverable" as const,
+      color: "text-[var(--color-success)]",
+      bgColor: "bg-[var(--color-success-light)]",
+      hoverBg: "hover:bg-[var(--color-success)]",
+    },
+    { 
+      label: "Post Update", 
+      description: "Share your progress",
+      icon: MessageSquare, 
+      modal: "update" as const,
+      color: "text-[var(--color-info)]",
+      bgColor: "bg-[var(--color-info-light)]",
+      hoverBg: "hover:bg-[var(--color-info)]",
+    },
+    { 
+      label: "Request Help", 
+      description: "Alert team members",
+      icon: HelpCircle, 
+      modal: "help" as const,
+      color: "text-[var(--color-error)]",
+      bgColor: "bg-[var(--color-error-light)]",
+      hoverBg: "hover:bg-[var(--color-error)]",
+    },
   ];
 
   const handleCreateAgreement = (agreement: { title: string; description: string }) => {
@@ -72,9 +111,10 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#E4E6EB]">Dashboard</h1>
-        <p className="text-[#9BA3AF] mt-2">Welcome back! Here's what's happening with your projects.</p>
+        <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Dashboard</h1>
+        <p className="text-[var(--color-text-secondary)] mt-2">Welcome back! Here's what's happening with your projects.</p>
       </div>
 
       {/* Stats Grid */}
@@ -82,14 +122,17 @@ export default function Dashboard() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
+            <div 
+              key={stat.label} 
+              className="card p-6 cursor-pointer"
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[#9BA3AF]">{stat.label}</p>
-                  <p className="text-3xl font-bold text-[#E4E6EB] mt-2">{stat.value}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-secondary)]">{stat.label}</p>
+                  <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-2">{stat.value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg shadow-[0_0_20px_rgba(59,130,246,0.3)]`}>
-                  <Icon className="w-6 h-6 text-white" />
+                <div className={`${stat.bgColor} p-3 rounded-xl`}>
+                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
                 </div>
               </div>
             </div>
@@ -97,22 +140,26 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-purple-500/30 hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all">
-          <h2 className="text-xl font-bold text-[#E4E6EB] mb-4">Recent Activity</h2>
-          <div className="space-y-4">
+        <div className="lg:col-span-2 card p-6">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-5">Recent Activity</h2>
+          <div className="space-y-1">
             {recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex items-start gap-3 pb-4 border-b border-[#242938] last:border-b-0 last:pb-0">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold text-white">
+              <div 
+                key={idx} 
+                className="flex items-center gap-4 p-3 -mx-3 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
                   {activity.user.split(' ').map(n => n[0]).join('')}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-[#E4E6EB]">
-                    <span className="font-medium">{activity.user}</span> <span className="text-[#9BA3AF]">{activity.action}</span>{" "}
-                    <span className="font-medium">{activity.item}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[var(--color-text-primary)]">
+                    <span className="font-medium">{activity.user}</span>{" "}
+                    <span className="text-[var(--color-text-secondary)]">{activity.action}</span>{" "}
+                    <span className="font-medium text-[var(--color-primary)]">{activity.item}</span>
                   </p>
-                  <p className="text-xs text-[#6B7280] mt-1">{activity.time}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{activity.time}</p>
                 </div>
               </div>
             ))}
@@ -120,37 +167,27 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-gradient-to-br from-[#141824] to-[#0A0E1A] rounded-xl border border-[#242938] p-6 hover:border-blue-500/30 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all">
-          <h2 className="text-xl font-bold text-[#E4E6EB] mb-4">Quick Actions</h2>
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-5">Quick Actions</h2>
           <div className="space-y-3">
-            <button
-              onClick={() => setActiveModal("agreement")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/30 transition-all"
-            >
-              <p className="font-medium text-blue-400">Create New Agreement</p>
-              <p className="text-sm text-[#9BA3AF] mt-1">Set team expectations and rules</p>
-            </button>
-            <button
-              onClick={() => setActiveModal("deliverable")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/30 transition-all"
-            >
-              <p className="font-medium text-emerald-400">Add Deliverable</p>
-              <p className="text-sm text-[#9BA3AF] mt-1">Track new milestone or deadline</p>
-            </button>
-            <button
-              onClick={() => setActiveModal("update")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/30 transition-all"
-            >
-              <p className="font-medium text-purple-400">Post Status Update</p>
-              <p className="text-sm text-[#9BA3AF] mt-1">Share your progress with the team</p>
-            </button>
-            <button
-              onClick={() => setActiveModal("help")}
-              className="w-full text-left px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 transition-all"
-            >
-              <p className="font-medium text-red-400">Request Help</p>
-              <p className="text-sm text-[#9BA3AF] mt-1">Alert team members you need support</p>
-            </button>
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.modal}
+                  onClick={() => setActiveModal(action.modal)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl ${action.bgColor} border border-transparent hover:border-current ${action.hoverBg} hover:text-white group transition-all duration-[var(--transition-base)]`}
+                >
+                  <div className={`p-2 rounded-lg bg-white/80 group-hover:bg-white/20 transition-colors`}>
+                    <Icon className={`w-5 h-5 ${action.color} group-hover:text-white transition-colors`} />
+                  </div>
+                  <div className="text-left">
+                    <p className={`font-medium ${action.color} group-hover:text-white transition-colors`}>{action.label}</p>
+                    <p className="text-xs text-[var(--color-text-muted)] group-hover:text-white/70 transition-colors">{action.description}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
