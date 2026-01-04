@@ -242,19 +242,13 @@ export function withRateLimit<T extends (request: NextRequest) => Promise<NextRe
   handler: T
 ): (request: NextRequest) => Promise<NextResponse> {
   return async (request: NextRequest) => {
-    const rateLimitResponse = rateLimit(request, config);
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-
-    const response = await handler(request);
-
-    // Add rate limit headers to successful response
+    // Get identifier once
     const identifier =
       config.identifierType === 'ip'
         ? getClientIp(request)
         : request.headers.get('x-user-id') || getClientIp(request);
 
+    // Check rate limit ONCE and store result
     const result = checkRateLimit(identifier, config);
     const headers = rateLimitHeaders(
       config.limit,
@@ -263,7 +257,28 @@ export function withRateLimit<T extends (request: NextRequest) => Promise<NextRe
       result.retryAfter
     );
 
-    // Clone response and add headers
+    // Return 429 if not allowed
+    if (!result.allowed) {
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Too Many Requests',
+          message: `Rate limit exceeded. Please try again in ${result.retryAfter} seconds.`,
+          retryAfter: result.retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            ...Object.fromEntries(headers),
+          },
+        }
+      );
+    }
+
+    // Execute handler
+    const response = await handler(request);
+
+    // Add rate limit headers to successful response (using stored result)
     const newHeaders = new Headers(response.headers);
     headers.forEach((value, key) => {
       newHeaders.set(key, value);
