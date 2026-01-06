@@ -3,6 +3,23 @@
 import { Check, Clock, Calendar, AlertCircle, Loader2 } from "lucide-react";
 import type { AgreementWithSignatures, SignatureDisplay } from "@/hooks/useAgreements";
 
+/**
+ * Generate initials from a name with defensive fallback
+ */
+function getInitials(name: string): string {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return '?';
+  return (
+    trimmed
+      .split(' ')
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || '?'
+  );
+}
+
 type AgreementDetailPanelProps = {
   agreement: AgreementWithSignatures;
   signatures: SignatureDisplay[];
@@ -158,12 +175,7 @@ export default function AgreementDetailPanel({
                           : "bg-[var(--color-surface-alt)] text-[var(--color-text-muted)]"
                       }`}
                     >
-                      {sig.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2)}
+                      {getInitials(sig.name)}
                     </div>
                     <div>
                       <div className="text-sm font-medium text-[var(--color-text-primary)]">

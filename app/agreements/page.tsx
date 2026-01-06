@@ -193,8 +193,12 @@ export default function Agreements() {
 
           {/* Search */}
           <div className="relative mb-3">
+            <label htmlFor="agreement-search" className="sr-only">
+              Search agreements
+            </label>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
             <input
+              id="agreement-search"
               type="text"
               placeholder="Search agreements..."
               value={searchQuery}
@@ -321,6 +325,7 @@ function AgreementListItem({
   return (
     <button
       onClick={onClick}
+      aria-label={`View agreement: ${agreement.title}, ${progress}% signed, status: ${agreement.status}`}
       className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
         isSelected
           ? "bg-[var(--color-primary-light)] border border-[var(--color-primary)] shadow-[var(--shadow-md)]"

@@ -263,13 +263,17 @@ export function useAgreements(): UseAgreementsResult {
           return { success: false, error: formatValidationError(validation.error) };
         }
 
-        // Check if already signed
-        const { data: existing } = await supabase
+        // Check if already signed (use maybeSingle to avoid error when no rows)
+        const { data: existing, error: checkError } = await supabase
           .from('agreement_signatures')
           .select('id')
           .eq('agreement_id', agreementId)
           .eq('member_id', currentUserId)
-          .single();
+          .maybeSingle();
+
+        if (checkError) {
+          return { success: false, error: 'Failed to check signature status' };
+        }
 
         if (existing) {
           return { success: false, error: 'You have already signed this agreement' };
@@ -287,14 +291,32 @@ export function useAgreements(): UseAgreementsResult {
           return { success: false, error: insertError.message };
         }
 
+        // Calculate new signature count and check if agreement is now fully signed
+        const currentAgreement = agreements.find((a) => a.id === agreementId);
+        const newSignedCount = (currentAgreement?.signedBy ?? 0) + 1;
+        const totalMembers = currentAgreement?.totalMembers ?? 0;
+        const shouldActivate = newSignedCount >= totalMembers && totalMembers > 0;
+
+        // Persist status to database if fully signed
+        if (shouldActivate) {
+          const { error: statusError } = await supabase
+            .from('agreements')
+            .update({ status: 'active' })
+            .eq('id', agreementId);
+
+          if (statusError) {
+            console.error('Failed to update agreement status:', statusError);
+          }
+        }
+
         // Update local state
         setAgreements((prev) =>
           prev.map((a) =>
             a.id === agreementId
               ? {
                   ...a,
-                  signedBy: a.signedBy + 1,
-                  status: a.signedBy + 1 >= a.totalMembers ? 'active' : a.status,
+                  signedBy: newSignedCount,
+                  status: shouldActivate ? 'active' : a.status,
                 }
               : a
           )
@@ -308,7 +330,7 @@ export function useAgreements(): UseAgreementsResult {
         setIsSigning(false);
       }
     },
-    [currentUserId]
+    [currentUserId, agreements]
   );
 
   /**
@@ -360,12 +382,17 @@ export function useAgreements(): UseAgreementsResult {
     async (agreementId: string): Promise<boolean> => {
       if (!currentUserId) return false;
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('agreement_signatures')
         .select('id')
         .eq('agreement_id', agreementId)
         .eq('member_id', currentUserId)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error('Failed to check signature status:', error);
+        return false;
+      }
 
       return !!data;
     },
@@ -400,8 +427,15 @@ function formatTimeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
   if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (seconds < 3600) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+
+  const hours = Math.floor(seconds / 3600);
+  if (seconds < 86400) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+
+  const days = Math.floor(seconds / 86400);
+  if (seconds < 604800) return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+
   return date.toLocaleDateString();
 }
