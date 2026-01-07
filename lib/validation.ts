@@ -198,6 +198,16 @@ export const deliverableUpdateSchema = z
   })
   .strict();
 
+export const deliverableDependencySchema = z
+  .object({
+    deliverable_id: uuidSchema,
+    depends_on_id: uuidSchema,
+  })
+  .strict()
+  .refine((data) => data.deliverable_id !== data.depends_on_id, {
+    message: 'A deliverable cannot depend on itself',
+  });
+
 // =============================================================================
 // Update (Status Post) Schemas
 // =============================================================================
@@ -230,6 +240,7 @@ export type AgreementUpdate = z.infer<typeof agreementUpdateSchema>;
 export type AgreementSignature = z.infer<typeof agreementSignatureSchema>;
 export type DeliverableCreate = z.infer<typeof deliverableCreateSchema>;
 export type DeliverableUpdate = z.infer<typeof deliverableUpdateSchema>;
+export type DeliverableDependencyInput = z.infer<typeof deliverableDependencySchema>;
 export type UpdateCreate = z.infer<typeof updateCreateSchema>;
 export type UpdateReaction = z.infer<typeof updateReactionSchema>;
 

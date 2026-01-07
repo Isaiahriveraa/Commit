@@ -139,6 +139,42 @@ export type Database = {
           },
         ]
       }
+      deliverable_dependencies: {
+        Row: {
+          id: string
+          deliverable_id: string
+          depends_on_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          deliverable_id: string
+          depends_on_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          deliverable_id?: string
+          depends_on_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_dependencies_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "deliverables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_dependencies_depends_on_id_fkey"
+            columns: ["depends_on_id"]
+            isOneToOne: false
+            referencedRelation: "deliverables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           avatar_url: string | null
@@ -405,3 +441,6 @@ export type UpdateUpdate = Database['public']['Tables']['updates']['Update'];
 
 export type UpdateReaction = Database['public']['Tables']['update_reactions']['Row'];
 export type UpdateReactionInsert = Database['public']['Tables']['update_reactions']['Insert'];
+
+export type DeliverableDependency = Database['public']['Tables']['deliverable_dependencies']['Row'];
+export type DeliverableDependencyInsert = Database['public']['Tables']['deliverable_dependencies']['Insert'];

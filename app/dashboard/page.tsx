@@ -114,7 +114,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Dashboard</h1>
-        <p className="text-[var(--color-text-secondary)] mt-2">Welcome back! Here's what's happening with your projects.</p>
+        <p className="text-[var(--color-text-secondary)] mt-2">Welcome back! Here&apos;s what&apos;s happening with your projects.</p>
       </div>
 
       {/* Stats Grid */}

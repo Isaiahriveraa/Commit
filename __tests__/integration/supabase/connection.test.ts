@@ -50,6 +50,7 @@ describe('Supabase Connection', () => {
       'agreements',
       'agreement_signatures',
       'deliverables',
+      'deliverable_dependencies',
       'updates',
       'update_reactions',
     ] as const;
@@ -66,7 +67,7 @@ describe('Supabase Connection', () => {
 
   describe('Table Schema Validation', () => {
     it('should have correct columns in team_members', async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('team_members')
         .select('id, name, email, avatar_url, role, created_at')
         .limit(0);
@@ -76,7 +77,7 @@ describe('Supabase Connection', () => {
     });
 
     it('should have correct columns in agreements', async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('agreements')
         .select('id, title, description, status, created_by, created_at, updated_at')
         .limit(0);
@@ -85,7 +86,7 @@ describe('Supabase Connection', () => {
     });
 
     it('should have correct columns in deliverables', async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('deliverables')
         .select(
           'id, title, description, owner_id, deadline, progress, status, created_at, updated_at'
@@ -96,9 +97,18 @@ describe('Supabase Connection', () => {
     });
 
     it('should have correct columns in updates', async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('updates')
         .select('id, content, author_id, deliverable_id, is_help_request, created_at')
+        .limit(0);
+
+      expect(error).toBeNull();
+    });
+
+    it('should have correct columns in deliverable_dependencies', async () => {
+      const { error } = await supabase
+        .from('deliverable_dependencies')
+        .select('id, deliverable_id, depends_on_id, created_at')
         .limit(0);
 
       expect(error).toBeNull();
