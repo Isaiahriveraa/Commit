@@ -125,11 +125,10 @@ export function useDeliverables(): UseDeliverablesResult {
    */
   const fetchDeliverables = useCallback(
     async (members: TeamMember[]): Promise<DeliverableWithDetails[]> => {
-      // Fetch deliverables
+      // Fetch deliverables (sorting handled client-side for consistent null handling)
       const { data: deliverablesData, error: deliverablesError } = await supabase
         .from('deliverables')
-        .select('*')
-        .order('deadline', { ascending: true, nullsFirst: false });
+        .select('*');
 
       if (deliverablesError) {
         throw new Error(`Failed to fetch deliverables: ${deliverablesError.message}`);
@@ -190,7 +189,10 @@ export function useDeliverables(): UseDeliverablesResult {
       const members = await fetchTeamMembers();
       setTeamMembers(members);
 
-      // Set current user to first team member (no auth yet)
+      // TODO: Replace this placeholder with real authentication-derived user context.
+      // Currently sets the current user to the first team member (no auth yet),
+      // which can lead to incorrect audit trails and ownership tracking.
+      // BLOCKER: Must implement proper authentication before production use.
       if (members.length > 0) {
         setCurrentUserId(members[0].id);
       }
@@ -275,6 +277,21 @@ export function useDeliverables(): UseDeliverablesResult {
 
           if (depsError) {
             console.error('Failed to insert dependencies:', depsError);
+
+            // Roll back the deliverable creation to avoid inconsistent state
+            const { error: rollbackError } = await supabase
+              .from('deliverables')
+              .delete()
+              .eq('id', deliverable.id);
+
+            if (rollbackError) {
+              console.error('Failed to roll back deliverable after dependency failure:', rollbackError);
+            }
+
+            return {
+              success: false,
+              error: 'Deliverable could not be saved because adding its dependencies failed. Please try again.',
+            };
           }
         }
 
@@ -434,7 +451,7 @@ export function useDeliverables(): UseDeliverablesResult {
       deliverableId: string,
       dependsOnId: string
     ): Promise<{ success: boolean; error?: string }> => {
-      // Validate
+      // Validate schema
       const validation = validate(deliverableDependencySchema, {
         deliverable_id: deliverableId,
         depends_on_id: dependsOnId,
@@ -442,6 +459,23 @@ export function useDeliverables(): UseDeliverablesResult {
 
       if (!validation.success) {
         return { success: false, error: formatValidationError(validation.error) };
+      }
+
+      // Validate self-referential
+      if (deliverableId === dependsOnId) {
+        return { success: false, error: 'A deliverable cannot depend on itself' };
+      }
+
+      // Validate both deliverables exist
+      const deliverableExists = deliverables.some(d => d.id === deliverableId);
+      const dependsOnExists = deliverables.some(d => d.id === dependsOnId);
+
+      if (!deliverableExists) {
+        return { success: false, error: 'Deliverable not found' };
+      }
+
+      if (!dependsOnExists) {
+        return { success: false, error: 'Dependency deliverable not found' };
       }
 
       try {
@@ -456,6 +490,10 @@ export function useDeliverables(): UseDeliverablesResult {
           // Check for unique constraint violation
           if (insertError.code === '23505') {
             return { success: false, error: 'This dependency already exists' };
+          }
+          // Check for circular dependency error from trigger
+          if (insertError.code === 'P0001') {
+            return { success: false, error: 'This would create a circular dependency' };
           }
           return { success: false, error: insertError.message };
         }
@@ -475,7 +513,7 @@ export function useDeliverables(): UseDeliverablesResult {
         return { success: false, error: message };
       }
     },
-    []
+    [deliverables]
   );
 
   /**

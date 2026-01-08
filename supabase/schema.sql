@@ -173,18 +173,85 @@ CREATE TABLE IF NOT EXISTS deliverable_dependencies (
 -- Enable RLS
 ALTER TABLE deliverable_dependencies ENABLE ROW LEVEL SECURITY;
 
--- Policies
-CREATE POLICY "Allow all read access to deliverable_dependencies"
+-- Policies: Ensure users can only access dependencies for deliverables they can see
+CREATE POLICY "Allow read access to deliverable_dependencies when user can access both deliverables"
   ON deliverable_dependencies FOR SELECT
-  USING (true);
+  USING (
+    EXISTS (
+      SELECT 1 FROM deliverables d1 WHERE d1.id = deliverable_id
+    )
+    AND EXISTS (
+      SELECT 1 FROM deliverables d2 WHERE d2.id = depends_on_id
+    )
+  );
 
-CREATE POLICY "Allow all insert access to deliverable_dependencies"
+CREATE POLICY "Allow insert into deliverable_dependencies when user can access both deliverables"
   ON deliverable_dependencies FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM deliverables d1 WHERE d1.id = deliverable_id
+    )
+    AND EXISTS (
+      SELECT 1 FROM deliverables d2 WHERE d2.id = depends_on_id
+    )
+  );
 
-CREATE POLICY "Allow all delete access to deliverable_dependencies"
+CREATE POLICY "Allow delete from deliverable_dependencies when user can access both deliverables"
   ON deliverable_dependencies FOR DELETE
-  USING (true);
+  USING (
+    EXISTS (
+      SELECT 1 FROM deliverables d1 WHERE d1.id = deliverable_id
+    )
+    AND EXISTS (
+      SELECT 1 FROM deliverables d2 WHERE d2.id = depends_on_id
+    )
+  );
+
+-- =============================================================================
+-- Circular Dependency Prevention
+-- =============================================================================
+-- Prevents circular dependency chains (e.g., A→B→C→A)
+CREATE OR REPLACE FUNCTION prevent_deliverable_dependency_cycles()
+RETURNS TRIGGER AS $$
+DECLARE
+  cycle_found BOOLEAN;
+BEGIN
+  -- Skip check if either ID is NULL (shouldn't occur due to NOT NULL)
+  IF NEW.deliverable_id IS NULL OR NEW.depends_on_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Recursive search: starting from depends_on_id, walk forward to see if we reach deliverable_id
+  WITH RECURSIVE dependency_chain AS (
+    SELECT d.deliverable_id, d.depends_on_id
+    FROM deliverable_dependencies d
+    WHERE d.deliverable_id = NEW.depends_on_id
+
+    UNION
+
+    SELECT next_dep.deliverable_id, next_dep.depends_on_id
+    FROM deliverable_dependencies next_dep
+    JOIN dependency_chain dc ON next_dep.deliverable_id = dc.depends_on_id
+  )
+  SELECT EXISTS (
+    SELECT 1 FROM dependency_chain WHERE depends_on_id = NEW.deliverable_id
+  ) INTO cycle_found;
+
+  IF cycle_found THEN
+    RAISE EXCEPTION 'Inserting dependency (% -> %) would create a circular dependency chain.',
+      NEW.deliverable_id, NEW.depends_on_id
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attach trigger to prevent cycles on insert/update
+CREATE TRIGGER trg_prevent_deliverable_dependency_cycles
+  BEFORE INSERT OR UPDATE ON deliverable_dependencies
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_deliverable_dependency_cycles();
 
 -- Index for efficient dependency lookups
 CREATE INDEX IF NOT EXISTS idx_deliverable_deps_deliverable ON deliverable_dependencies(deliverable_id);
