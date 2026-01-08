@@ -155,6 +155,42 @@ CREATE TRIGGER update_deliverables_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- =============================================================================
+-- Deliverable Dependencies Table (Many-to-Many)
+-- =============================================================================
+-- Tracks which deliverables depend on which other deliverables.
+-- deliverable_id: The deliverable that has dependencies
+-- depends_on_id: The prerequisite deliverable it depends on
+CREATE TABLE IF NOT EXISTS deliverable_dependencies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  deliverable_id UUID NOT NULL REFERENCES deliverables(id) ON DELETE CASCADE,
+  depends_on_id UUID NOT NULL REFERENCES deliverables(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(deliverable_id, depends_on_id),
+  -- Prevent self-referential dependencies
+  CHECK (deliverable_id != depends_on_id)
+);
+
+-- Enable RLS
+ALTER TABLE deliverable_dependencies ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+CREATE POLICY "Allow all read access to deliverable_dependencies"
+  ON deliverable_dependencies FOR SELECT
+  USING (true);
+
+CREATE POLICY "Allow all insert access to deliverable_dependencies"
+  ON deliverable_dependencies FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Allow all delete access to deliverable_dependencies"
+  ON deliverable_dependencies FOR DELETE
+  USING (true);
+
+-- Index for efficient dependency lookups
+CREATE INDEX IF NOT EXISTS idx_deliverable_deps_deliverable ON deliverable_dependencies(deliverable_id);
+CREATE INDEX IF NOT EXISTS idx_deliverable_deps_depends_on ON deliverable_dependencies(depends_on_id);
+
+-- =============================================================================
 -- Updates (Status Posts) Table
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS updates (

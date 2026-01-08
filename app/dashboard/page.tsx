@@ -6,6 +6,7 @@ import CreateAgreementModal from "@/components/CreateAgreementModal";
 import AddDeliverableModal from "@/components/AddDeliverableModal";
 import PostUpdateModal from "@/components/PostUpdateModal";
 import RequestHelpModal from "@/components/RequestHelpModal";
+import { useDeliverables } from "@/hooks/useDeliverables";
 
 type Activity = {
   user: string;
@@ -22,6 +23,14 @@ export default function Dashboard() {
     { user: "Emma Wilson", action: "signed", item: "Team Agreement v2", time: "Yesterday" },
     { user: "Alex Kim", action: "created", item: "Sprint Planning Deliverable", time: "Yesterday" },
   ]);
+
+  const {
+    createDeliverable,
+    teamMembers,
+    deliverables,
+    isCreating,
+    error: createError,
+  } = useDeliverables();
 
   const stats = [
     { label: "Active Projects", value: "3", icon: Target, bgColor: "bg-[var(--color-primary-light)]", iconColor: "text-[var(--color-primary)]" },
@@ -79,14 +88,31 @@ export default function Dashboard() {
     setRecentActivity([newActivity, ...recentActivity]);
   };
 
-  const handleAddDeliverable = (deliverable: { title: string; description: string; owner: string; deadline: string }) => {
-    const newActivity: Activity = {
-      user: "You",
-      action: "created deliverable",
-      item: deliverable.title,
-      time: "Just now",
-    };
-    setRecentActivity([newActivity, ...recentActivity]);
+  const handleAddDeliverable = async (deliverable: {
+    title: string;
+    description: string;
+    owner_id: string | null;
+    deadline: string;
+    dependencyIds?: string[];
+  }) => {
+    const result = await createDeliverable({
+      title: deliverable.title,
+      description: deliverable.description,
+      owner_id: deliverable.owner_id,
+      deadline: deliverable.deadline,
+      dependencyIds: deliverable.dependencyIds,
+    });
+
+    if (result.success) {
+      const newActivity: Activity = {
+        user: "You",
+        action: "created deliverable",
+        item: deliverable.title,
+        time: "Just now",
+      };
+      setRecentActivity([newActivity, ...recentActivity]);
+      setActiveModal(null);
+    }
   };
 
   const handlePostUpdate = (update: { content: string; linkedDeliverable?: string }) => {
@@ -114,7 +140,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Dashboard</h1>
-        <p className="text-[var(--color-text-secondary)] mt-2">Welcome back! Here's what's happening with your projects.</p>
+        <p className="text-[var(--color-text-secondary)] mt-2">Welcome back! Here&apos;s what&apos;s happening with your projects.</p>
       </div>
 
       {/* Stats Grid */}
@@ -202,6 +228,10 @@ export default function Dashboard() {
         isOpen={activeModal === "deliverable"}
         onClose={() => setActiveModal(null)}
         onSubmit={handleAddDeliverable}
+        teamMembers={teamMembers}
+        allDeliverables={deliverables}
+        isSubmitting={isCreating}
+        error={createError}
       />
       <PostUpdateModal
         isOpen={activeModal === "update"}
