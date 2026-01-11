@@ -200,69 +200,92 @@ function DeliverableForm({
           />
         </div>
 
-        {!initialData && availableDependencies.length > 0 && (
+        {availableDependencies.length > 0 && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
-              Dependencies (Optional)
+              Dependencies {initialData ? "(Cannot be modified)" : "(Optional)"}
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowDependenciesDropdown(!showDependenciesDropdown)}
-                disabled={isSubmitting}
-                className="w-full px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-left flex items-center justify-between focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] outline-none transition-all disabled:opacity-50"
-              >
-                <span
-                  className={
-                    selectedDependencies.length > 0
-                      ? "text-[var(--color-text-primary)]"
-                      : "text-[var(--color-text-muted)]"
-                  }
+            {initialData ? (
+              // Show read-only list of current dependencies when editing
+              <div className="px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg">
+                {selectedDependencies.length > 0 ? (
+                  <ul className="space-y-2">
+                    {selectedDependencies.map(depId => {
+                      const dep = availableDependencies.find(d => d.id === depId);
+                      return dep ? (
+                        <li key={depId} className="text-sm text-[var(--color-text-primary)]">
+                          • {dep.title}
+                        </li>
+                      ) : null;
+                    })}
+                  </ul>
+                ) : (
+                  <span className="text-sm text-[var(--color-text-muted)]">No dependencies</span>
+                )}
+              </div>
+            ) : (
+              // Show dropdown for new deliverables
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowDependenciesDropdown(!showDependenciesDropdown)}
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-left flex items-center justify-between focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] outline-none transition-all disabled:opacity-50"
                 >
-                  {selectedDependencies.length > 0
-                    ? `${selectedDependencies.length} deliverable${
-                        selectedDependencies.length > 1 ? "s" : ""
-                      } selected`
-                    : "Select dependencies..."}
-                </span>
-                <ChevronDown
-                  className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${
-                    showDependenciesDropdown ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                  <span
+                    className={
+                      selectedDependencies.length > 0
+                        ? "text-[var(--color-text-primary)]"
+                        : "text-[var(--color-text-muted)]"
+                    }
+                  >
+                    {selectedDependencies.length > 0
+                      ? `${selectedDependencies.length} deliverable${
+                          selectedDependencies.length > 1 ? "s" : ""
+                        } selected`
+                      : "Select dependencies..."}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${
+                      showDependenciesDropdown ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-              {showDependenciesDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-[var(--shadow-lg)] z-10 max-h-48 overflow-auto">
-                  {availableDependencies.map((dep) => (
-                    <button
-                      key={dep.id}
-                      type="button"
-                      onClick={() => toggleDependency(dep.id)}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-[var(--color-surface-hover)] flex items-center justify-between ${
-                        selectedDependencies.includes(dep.id)
-                          ? "bg-[var(--color-primary-light)]"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[var(--color-text-primary)] truncate">
-                          {dep.title}
+                {showDependenciesDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-[var(--shadow-lg)] z-10 max-h-48 overflow-auto">
+                    {availableDependencies.map((dep) => (
+                      <button
+                        key={dep.id}
+                        type="button"
+                        onClick={() => toggleDependency(dep.id)}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-[var(--color-surface-hover)] flex items-center justify-between ${
+                          selectedDependencies.includes(dep.id)
+                            ? "bg-[var(--color-primary-light)]"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[var(--color-text-primary)] truncate">
+                            {dep.title}
+                          </div>
+                          <div className="text-xs text-[var(--color-text-muted)]">
+                            {dep.ownerName} • {dep.progress ?? 0}% complete
+                          </div>
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
-                          {dep.ownerName} • {dep.progress ?? 0}% complete
-                        </div>
-                      </div>
-                      {selectedDependencies.includes(dep.id) && (
-                        <Check className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 ml-2" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                        {selectedDependencies.includes(dep.id) && (
+                          <Check className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 ml-2" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              Select deliverables that must be completed before this one
+              {initialData
+                ? "Dependencies cannot be modified after creation to maintain data integrity"
+                : "Select deliverables that must be completed before this one"}
             </p>
           </div>
         )}

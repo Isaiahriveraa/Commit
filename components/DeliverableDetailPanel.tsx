@@ -292,7 +292,18 @@ export default function DeliverableDetailPanel({
       {showProgressModal && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowProgressModal(false)}
+          onClick={(e) => {
+            // Only close if clicking backdrop, not modal content
+            if (e.target === e.currentTarget) {
+              if (newProgress !== deliverable.progress) {
+                const confirmClose = window.confirm(
+                  "You have unsaved changes to the progress. Do you want to discard them?"
+                );
+                if (!confirmClose) return;
+              }
+              setShowProgressModal(false);
+            }
+          }}
         >
           <div
             className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-xl)] max-w-md w-full"

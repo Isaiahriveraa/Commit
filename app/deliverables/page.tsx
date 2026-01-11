@@ -19,6 +19,7 @@ export default function Deliverables() {
     createDeliverable,
     updateDeliverable,
     updateProgress,
+    refresh,
   } = useDeliverables();
 
   const [selectedDeliverableId, setSelectedDeliverableId] = useState<string | null>(null);
@@ -76,6 +77,7 @@ export default function Deliverables() {
 
   const handleEditClick = (deliverable: DeliverableWithDetails) => {
     setEditingDeliverable(deliverable);
+    setCreateError(null); // Clear any stale errors from previous operations
     setShowAddModal(true);
   };
 
@@ -176,7 +178,7 @@ export default function Deliverables() {
           </h2>
           <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refresh()}
             className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
           >
             Retry
