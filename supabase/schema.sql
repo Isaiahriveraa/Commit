@@ -325,6 +325,43 @@ CREATE POLICY "Allow all delete access to update_reactions"
 --   ('Alex Kim', 'alex@example.com', 'member');
 
 -- =============================================================================
+-- Atomic Deliverable Creation with Dependencies
+-- =============================================================================
+-- Creates a deliverable and its dependencies in a single transaction.
+-- If any part fails (e.g., circular dependency), everything is rolled back.
+CREATE OR REPLACE FUNCTION create_deliverable_with_dependencies(
+  p_title TEXT,
+  p_description TEXT DEFAULT NULL,
+  p_owner_id UUID DEFAULT NULL,
+  p_deadline DATE DEFAULT NULL,
+  p_status TEXT DEFAULT 'upcoming',
+  p_progress INTEGER DEFAULT 0,
+  p_dependency_ids UUID[] DEFAULT NULL
+)
+RETURNS JSON AS $$
+DECLARE
+  v_deliverable deliverables%ROWTYPE;
+  v_dep_id UUID;
+BEGIN
+  -- Insert the deliverable
+  INSERT INTO deliverables (title, description, owner_id, deadline, status, progress)
+  VALUES (p_title, p_description, p_owner_id, p_deadline, p_status, p_progress)
+  RETURNING * INTO v_deliverable;
+
+  -- Insert dependencies if provided
+  IF p_dependency_ids IS NOT NULL THEN
+    FOREACH v_dep_id IN ARRAY p_dependency_ids LOOP
+      INSERT INTO deliverable_dependencies (deliverable_id, depends_on_id)
+      VALUES (v_deliverable.id, v_dep_id);
+    END LOOP;
+  END IF;
+
+  -- Return the created deliverable as JSON
+  RETURN row_to_json(v_deliverable);
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================================================
 -- Indexes for Performance
 -- =============================================================================
 CREATE INDEX IF NOT EXISTS idx_agreements_status ON agreements(status);
