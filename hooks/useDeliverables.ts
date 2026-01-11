@@ -125,7 +125,8 @@ export function useDeliverables(): UseDeliverablesResult {
    */
   const fetchDeliverables = useCallback(
     async (members: TeamMember[]): Promise<DeliverableWithDetails[]> => {
-      // Fetch deliverables (sorting handled client-side for consistent null handling)
+      // Fetch deliverables without database ordering;
+      // sorting is deferred to consuming components for flexibility
       const { data: deliverablesData, error: deliverablesError } = await supabase
         .from('deliverables')
         .select('*');
@@ -243,57 +244,32 @@ export function useDeliverables(): UseDeliverablesResult {
           return { success: false, error: formatValidationError(validation.error) };
         }
 
-        // Insert deliverable
-        const { data: newDeliverable, error: insertError } = await supabase
-          .from('deliverables')
-          .insert({
-            title: validation.data.title,
-            description: validation.data.description,
-            owner_id: validation.data.owner_id,
-            deadline: validation.data.deadline,
-            status: validation.data.status,
-            progress: validation.data.progress,
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          return { success: false, error: insertError.message };
-        }
-
-        const deliverable = newDeliverable as Deliverable;
-
-        // Insert dependencies if provided
+        // Use atomic RPC function to create deliverable with dependencies
+        // This ensures both operations succeed or fail together (no orphaned records)
         const dependencyIds = data.dependencyIds || [];
-        if (dependencyIds.length > 0) {
-          const depsToInsert = dependencyIds.map((depId) => ({
-            deliverable_id: deliverable.id,
-            depends_on_id: depId,
-          }));
 
-          const { error: depsError } = await supabase
-            .from('deliverable_dependencies')
-            .insert(depsToInsert);
-
-          if (depsError) {
-            console.error('Failed to insert dependencies:', depsError);
-
-            // Roll back the deliverable creation to avoid inconsistent state
-            const { error: rollbackError } = await supabase
-              .from('deliverables')
-              .delete()
-              .eq('id', deliverable.id);
-
-            if (rollbackError) {
-              console.error('Failed to roll back deliverable after dependency failure:', rollbackError);
-            }
-
-            return {
-              success: false,
-              error: 'Deliverable could not be saved because adding its dependencies failed. Please try again.',
-            };
+        const { data: rpcResult, error: rpcError } = await supabase.rpc(
+          'create_deliverable_with_dependencies',
+          {
+            p_title: validation.data.title,
+            p_description: validation.data.description ?? null,
+            p_owner_id: validation.data.owner_id ?? null,
+            p_deadline: validation.data.deadline ?? null,
+            p_status: validation.data.status,
+            p_progress: validation.data.progress,
+            p_dependency_ids: dependencyIds.length > 0 ? dependencyIds : null,
           }
+        );
+
+        if (rpcError) {
+          // Check for circular dependency error from trigger (check_violation: 23514)
+          if (rpcError.code === '23514') {
+            return { success: false, error: 'Cannot create: this would create a circular dependency' };
+          }
+          return { success: false, error: rpcError.message };
         }
+
+        const deliverable = rpcResult as Deliverable;
 
         // Add to local state
         const enrichedDeliverable: DeliverableWithDetails = {
@@ -461,7 +437,11 @@ export function useDeliverables(): UseDeliverablesResult {
         return { success: false, error: formatValidationError(validation.error) };
       }
 
-      // Validate self-referential
+      // Validate self-referential dependency
+      // NOTE: This duplicates the database CHECK constraint (schema.sql line 170).
+      // The database remains authoritative; this client-side check:
+      // 1. Provides immediate UX feedback without a network round-trip
+      // 2. Avoids wasting an API call for a predictable validation failure
       if (deliverableId === dependsOnId) {
         return { success: false, error: 'A deliverable cannot depend on itself' };
       }
@@ -492,7 +472,8 @@ export function useDeliverables(): UseDeliverablesResult {
             return { success: false, error: 'This dependency already exists' };
           }
           // Check for circular dependency error from trigger
-          if (insertError.code === 'P0001') {
+          // The trigger uses ERRCODE = 'check_violation' which maps to PostgreSQL code '23514'
+          if (insertError.code === '23514') {
             return { success: false, error: 'This would create a circular dependency' };
           }
           return { success: false, error: insertError.message };

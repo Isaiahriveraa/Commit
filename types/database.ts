@@ -3,7 +3,7 @@
  * These types mirror the Supabase database schema and provide
  * full TypeScript type safety for all database operations.
  *
- * To regenerate: npx supabase gen types typescript --project-id lwupsdjlsabdiyiezhhi
+ * To regenerate: npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID
  */
 
 export type Json =
@@ -288,7 +288,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_deliverable_with_dependencies: {
+        Args: {
+          p_title: string
+          p_description: string | null
+          p_owner_id: string | null
+          p_deadline: string | null
+          p_status: string
+          p_progress: number
+          p_dependency_ids: string[] | null
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
