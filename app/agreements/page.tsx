@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, FileText, Search, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, FileText, Search, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import CreateAgreementModal from "@/components/CreateAgreementModal";
 import AgreementDetailPanel from "@/components/AgreementDetailPanel";
-import { useAgreements, type AgreementWithSignatures, type SignatureDisplay } from "@/hooks/useAgreements";
+import {
+  useAgreements,
+  type AgreementWithSignatures,
+  type SignatureDisplay,
+} from "@/hooks/useAgreements";
 
 type FilterStatus = "all" | "active" | "pending" | "archived";
 
@@ -17,11 +21,15 @@ export default function Agreements() {
     error,
     createAgreement,
     signAgreement,
+    deleteAgreement,
+    permanentlyDeleteAgreement,
     fetchSignatures,
     hasUserSigned,
   } = useAgreements();
 
-  const [selectedAgreementId, setSelectedAgreementId] = useState<string | null>(null);
+  const [selectedAgreementId, setSelectedAgreementId] = useState<string | null>(
+    null
+  );
   const [signatures, setSignatures] = useState<SignatureDisplay[]>([]);
   const [userSigned, setUserSigned] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -73,7 +81,10 @@ export default function Agreements() {
     };
   }, [selectedAgreementId, fetchSignatures, hasUserSigned]);
 
-  const handleCreateAgreement = async (data: { title: string; description: string }) => {
+  const handleCreateAgreement = async (data: {
+    title: string;
+    description: string;
+  }) => {
     setCreateError(null);
     const result = await createAgreement(data);
 
@@ -111,20 +122,22 @@ export default function Agreements() {
     return matchesStatus && matchesSearch;
   });
 
-  const selectedAgreement = agreements.find((a) => a.id === selectedAgreementId);
+  const selectedAgreement = agreements.find(
+    (a) => a.id === selectedAgreementId
+  );
 
   // Loading state
   if (isLoading) {
     return (
       <div className="flex h-full">
         {/* Left Panel Skeleton */}
-        <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
-          <div className="p-4 border-b border-[var(--color-border)]">
+        <div className="w-80 bg-(--color-surface) border-r border-(--color-border) flex-col">
+          <div className="p-4 border-b border-(--color-border)">
             <div className="flex items-center justify-between mb-4">
-              <div className="h-6 w-24 bg-[var(--color-surface-alt)] rounded animate-pulse" />
-              <div className="h-8 w-8 bg-[var(--color-surface-alt)] rounded-lg animate-pulse" />
+              <div className="h-6 w-24 bg-(--color-surface-alt)ded animate-pulse" />
+              <div className="h-8 w-8 bg-(--color-surface-alt) rounded-lg animate-pulse" />
             </div>
-            <div className="h-10 bg-[var(--color-surface-alt)] rounded-lg animate-pulse mb-3" />
+            <div className="h-10 bg-(--color-surface-alt) rounded-lg animate-pulse mb-3" />
             <div className="flex gap-2">
               <div className="flex-1 h-8 bg-[var(--color-surface-alt)] rounded-lg animate-pulse" />
               <div className="flex-1 h-8 bg-[var(--color-surface-alt)] rounded-lg animate-pulse" />
@@ -182,7 +195,9 @@ export default function Agreements() {
         {/* Header */}
         <div className="p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Agreements</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+              Agreements
+            </h2>
             <button
               onClick={() => setShowCreateModal(true)}
               className="p-2 bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]"
@@ -214,7 +229,7 @@ export default function Agreements() {
               className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "all"
                   ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+                  : "text-(--color-text-secondary) hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               All
@@ -246,14 +261,14 @@ export default function Agreements() {
         <div className="flex-1 overflow-auto p-2">
           {filteredAgreements.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <FileText className="w-8 h-8 text-[var(--color-text-muted)] mb-2" />
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <FileText className="w-8 h-8 text-(--color-text-muted) mb-2" />
+              <p className="text-sm text-(--color-text-muted)">
                 {searchQuery ? "No agreements found" : "No agreements yet"}
               </p>
               {!searchQuery && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="mt-2 text-sm text-[var(--color-primary)] hover:underline"
+                  className="mt-2 text-sm text-(--color-primary) hover:underline"
                 >
                   Create your first agreement
                 </button>
@@ -266,6 +281,12 @@ export default function Agreements() {
                 agreement={agreement}
                 isSelected={selectedAgreementId === agreement.id}
                 onClick={() => setSelectedAgreementId(agreement.id)}
+                onDelete={async (agreementId) => {
+                  const res = await deleteAgreement(agreementId);
+                  if (res.success) {
+                    console.log('Deleted:', res.deleted?.title);
+                  }
+                }}
               />
             ))
           )}
@@ -273,7 +294,7 @@ export default function Agreements() {
       </div>
 
       {/* Right Panel - Agreement Detail */}
-      <div className="flex-1 overflow-auto bg-[var(--color-bg)]">
+      <div className="flex-1 overflow-auto bg-(--color-bg)">
         {selectedAgreement ? (
           <AgreementDetailPanel
             agreement={selectedAgreement}
@@ -286,7 +307,9 @@ export default function Agreements() {
           />
         ) : (
           <div className="h-full flex items-center justify-center">
-            <p className="text-[var(--color-text-muted)]">Select an agreement to view details</p>
+            <p className="text-(--color-text-muted)">
+              Select an agreement to view details
+            </p>
           </div>
         )}
       </div>
@@ -313,63 +336,92 @@ function AgreementListItem({
   agreement,
   isSelected,
   onClick,
+  onDelete,
 }: {
   agreement: AgreementWithSignatures;
   isSelected: boolean;
   onClick: () => void;
+  onDelete: (agreementId: string) => void;
 }) {
-  const progress = agreement.totalMembers > 0
-    ? Math.round((agreement.signedBy / agreement.totalMembers) * 100)
-    : 0;
+  
+  const [isHovered, setIsHovered] = useState(false);
+  const progress =
+    agreement.totalMembers > 0
+      ? Math.round((agreement.signedBy / agreement.totalMembers) * 100)
+      : 0;
 
   return (
-    <button
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       aria-label={`View agreement: ${agreement.title}, ${progress}% signed, status: ${agreement.status}`}
-      className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
+      className={`w-full text-left p-3 rounded-xl mb-2 transition-all cursor-pointer ${
         isSelected
-          ? "bg-[var(--color-primary-light)] border border-[var(--color-primary)] shadow-[var(--shadow-md)]"
-          : "border border-transparent hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border)]"
+          ? "bg-(--color-primary-light) border border-(--color-primary) shadow-(--shadow-md)"
+          : "border border-transparent hover:bg-(--color-surface-hover) hover:border-(--color-border)"
       }`}
     >
       <div className="flex items-start gap-2 mb-2">
         <div
           className={`p-1.5 rounded-lg ${
             agreement.status === "active"
-              ? "bg-[var(--color-success-light)]"
+              ? "bg-(--color-success-light)"
               : agreement.status === "pending"
-              ? "bg-[var(--color-warning-light)]"
-              : "bg-[var(--color-surface-alt)]"
+              ? "bg-(--color-warning-light)"
+              : "bg-(--color-surface-alt)"
           }`}
         >
           <FileText
             className={`w-3.5 h-3.5 ${
               agreement.status === "active"
-                ? "text-[var(--color-success)]"
+                ? "text-(--color-success)"
                 : agreement.status === "pending"
-                ? "text-[var(--color-warning)]"
-                : "text-[var(--color-text-muted)]"
+                ? "text=(--color-warning)]"
+                : "text-(--color-text-muted)"
             }`}
           />
         </div>
-        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] flex-1 leading-tight">
+        <h3 className="text-sm font-semibold text-(--color-text-primary) flex-1 leading-tight">
           {agreement.title}
         </h3>
+        {isHovered && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(agreement.id);
+            }}
+            className="p-1.5 rounded-lg text-(--color-text-muted) hover:bg-red-50 hover:text-red-600 transition-colors"
+            aria-label="Delete agreement"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <div className="pl-8">
-        <div className="relative h-1.5 bg-[var(--color-surface-alt)] rounded-full overflow-hidden mb-1.5">
+        <div className="relative h-1.5 bg-(--color-surface-alt) rounded-full overflow-hidden mb-1.5">
           <div
-            className="absolute inset-y-0 left-0 bg-[var(--color-primary)] rounded-full transition-all duration-300"
+            className="absolute inset-y-0 left-0 bg-(--color-primary) rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[var(--color-text-muted)]">
+          <span className="text-(--color-text-muted)">
             {agreement.signedBy}/{agreement.totalMembers} signed
           </span>
-          <span className="text-[var(--color-primary)] font-medium">{progress}%</span>
+          <span className="text-(--color-primary) font-medium">
+            {progress}%
+          </span>
         </div>
       </div>
-    </button>
+    </div>
   );
 }

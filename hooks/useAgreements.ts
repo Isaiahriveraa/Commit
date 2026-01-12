@@ -62,7 +62,19 @@ interface UseAgreementsResult {
     title: string;
     description: string;
   }) => Promise<{ success: boolean; error?: string; id?: string }>;
-  signAgreement: (agreementId: string) => Promise<{ success: boolean; error?: string }>;
+  signAgreement: (
+    agreementId: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  permanentlyDeleteAgreement: (
+    agreementId: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  deleteAgreement: (
+    agreementId: string
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    deleted?: AgreementWithSignatures;
+  }>;
   fetchSignatures: (agreementId: string) => Promise<SignatureDisplay[]>;
   hasUserSigned: (agreementId: string) => Promise<boolean>;
   refresh: () => Promise<void>;
@@ -76,6 +88,38 @@ export function useAgreements(): UseAgreementsResult {
   const [isCreating, setIsCreating] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const deleteAgreement = async (agreementId: string) => {
+    const agreementToDel = agreements.find((a) => a.id === agreementId);
+
+    //Edge case: Agreement not found
+    if (!agreementToDel) {
+      return {success: false, error: "Agreement not found!"};
+    }
+
+    //Remove the Agreement from the UI
+    setAgreements(prev => prev.filter(a => a.id !== agreementId));
+
+    return {success: true, deleted: agreementToDel};
+  };
+
+  /**
+   * Permanently delete an agreement from the database
+   * Called after undo timer expires
+   */
+  const permanentlyDeleteAgreement = async (agreementId: string) => {
+    //Delete from DB using Supabase
+    const { error: deleteError } = await supabase
+      .from('agreements')
+      .delete()
+      .eq('id', agreementId);
+
+    if (deleteError) {
+      return { success: false, error: deleteError.message };
+    }
+
+    return {success: true};
+  }
 
   /**
    * Fetch all team members
@@ -92,6 +136,7 @@ export function useAgreements(): UseAgreementsResult {
 
     return (data as TeamMember[]) || [];
   }, []);
+
 
   /**
    * Fetch all agreements with signature counts
@@ -414,6 +459,8 @@ export function useAgreements(): UseAgreementsResult {
     error,
     createAgreement,
     signAgreement,
+    deleteAgreement,
+    permanentlyDeleteAgreement,
     fetchSignatures,
     hasUserSigned,
     refresh,

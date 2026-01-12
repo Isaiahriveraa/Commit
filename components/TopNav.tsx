@@ -140,7 +140,7 @@ export default function TopNav() {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg hover:border-[var(--color-border-hover)] transition-colors"
+              className="flex items-center gap-2 p-2 bg-(--color-bg) border border-[var(--color-border)] rounded-lg hover:border-[var(--color-border-hover)] transition-colors"
             >
               <div className="w-6 h-6 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-xs font-bold">
                 SC
