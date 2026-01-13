@@ -75,6 +75,10 @@ interface UseAgreementsResult {
     error?: string;
     deleted?: AgreementWithSignatures;
   }>;
+  restoreAgreement: (
+    agreement: AgreementWithSignatures,
+    originalIndex: number
+  ) => void;
   fetchSignatures: (agreementId: string) => Promise<SignatureDisplay[]>;
   hasUserSigned: (agreementId: string) => Promise<boolean>;
   refresh: () => Promise<void>;
@@ -120,6 +124,26 @@ export function useAgreements(): UseAgreementsResult {
 
     return {success: true};
   }
+
+  /**
+   * Restore a deleted agreement back to state (for undo functionality)
+   * No database call needed since agreement wasn't permanently deleted yet
+   * Guards against duplicates by checking if agreement already exists
+   */
+  const restoreAgreement = (agreement: AgreementWithSignatures, originalIndex: number) => {
+    setAgreements(prev => {
+      // Guard: Don't add if already exists (prevents duplicates)
+      if (prev.some(a => a.id === agreement.id)) {
+        return prev;
+      }
+
+      const newList = [...prev];
+      // Insert at original position, or at end if index is out of bounds
+      const insertIndex = Math.min(originalIndex, newList.length);
+      newList.splice(insertIndex, 0, agreement);
+      return newList;
+    });
+  };
 
   /**
    * Fetch all team members
@@ -461,6 +485,7 @@ export function useAgreements(): UseAgreementsResult {
     signAgreement,
     deleteAgreement,
     permanentlyDeleteAgreement,
+    restoreAgreement,
     fetchSignatures,
     hasUserSigned,
     refresh,

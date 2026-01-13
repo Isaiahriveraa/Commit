@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, FileText, Search, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import CreateAgreementModal from "@/components/CreateAgreementModal";
 import AgreementDetailPanel from "@/components/AgreementDetailPanel";
+import UndoToast from "@/components/UndoToast";
 import {
   useAgreements,
   type AgreementWithSignatures,
@@ -23,6 +24,7 @@ export default function Agreements() {
     signAgreement,
     deleteAgreement,
     permanentlyDeleteAgreement,
+    restoreAgreement,
     fetchSignatures,
     hasUserSigned,
   } = useAgreements();
@@ -38,6 +40,20 @@ export default function Agreements() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
   const [loadingSignatures, setLoadingSignatures] = useState(false);
+
+  // Pending deletions array for multi-undo functionality
+  // Each deletion has a unique ID for independent tracking
+  const [pendingDeletions, setPendingDeletions] = useState<Array<{
+    id: string; // Unique ID for this deletion event
+    agreement: AgreementWithSignatures;
+    originalIndex: number;
+  }>>([]);
+
+  // Ref to access pendingDeletions in callbacks without causing re-renders
+  const pendingDeletionsRef = useRef(pendingDeletions);
+  useEffect(() => {
+    pendingDeletionsRef.current = pendingDeletions;
+  }, [pendingDeletions]);
 
   // Set initial selected agreement when data loads
   useEffect(() => {
@@ -112,6 +128,89 @@ export default function Agreements() {
     }
   };
 
+  /**
+   * Handle delete with undo pattern:
+   * 1. Remove from UI immediately (optimistic)
+   * 2. Add to pending deletions array for multi-undo support
+   * 3. Show stacked undo toasts - permanent deletion happens on each timeout
+   */
+  const handleDeleteAgreement = async (agreementId: string) => {
+    // Find the agreement and its index before deletion
+    const index = agreements.findIndex((a) => a.id === agreementId);
+    if (index === -1) return;
+
+    const result = await deleteAgreement(agreementId);
+    if (result.success && result.deleted) {
+      // Generate unique ID for this deletion event
+      const deletionId = `del_${Date.now()}_${agreementId}`;
+
+      // Add to pending deletions array (supports multiple)
+      setPendingDeletions((prev) => [
+        ...prev,
+        {
+          id: deletionId,
+          agreement: result.deleted!,
+          originalIndex: index,
+        },
+      ]);
+
+      // If deleted agreement was selected, select next available
+      if (selectedAgreementId === agreementId) {
+        const remaining = agreements.filter((a) => a.id !== agreementId);
+        setSelectedAgreementId(remaining.length > 0 ? remaining[0].id : null);
+      }
+    }
+  };
+
+  /**
+   * Restore a specific deleted agreement (undo action)
+   * Takes deletion ID to support undoing any item in the stack
+   * Wrapped in useCallback for stable reference (prevents timer resets)
+   * Uses ref to read pendingDeletions without adding to dependencies
+   */
+  const handleUndoDelete = useCallback((deletionId: string) => {
+    // Find the deletion using ref (stable reference, no re-renders)
+    const deletion = pendingDeletionsRef.current.find((d) => d.id === deletionId);
+
+    if (deletion) {
+      // Restore agreement first (separate state update)
+      restoreAgreement(deletion.agreement, deletion.originalIndex);
+    }
+
+    // Then remove from pending array (separate state update)
+    setPendingDeletions((prev) => prev.filter((d) => d.id !== deletionId));
+  }, [restoreAgreement]);
+
+  /**
+   * Permanently delete a specific agreement when its undo timeout expires
+   * Wrapped in useCallback for stable reference (prevents timer resets)
+   * Uses ref to read pendingDeletions without adding to dependencies
+   */
+  const handlePermanentDelete = useCallback(async (deletionId: string) => {
+    // Find the deletion using ref (stable reference)
+    const deletion = pendingDeletionsRef.current.find((d) => d.id === deletionId);
+    const agreementId = deletion?.agreement.id;
+
+    // Remove from pending array
+    setPendingDeletions((prev) => prev.filter((d) => d.id !== deletionId));
+
+    // Perform the actual database deletion
+    if (agreementId) {
+      const result = await permanentlyDeleteAgreement(agreementId);
+      if (!result.success) {
+        console.error("Failed to permanently delete:", result.error);
+      }
+    }
+  }, [permanentlyDeleteAgreement]);
+
+  /**
+   * Dismiss a specific toast (same as letting it timeout)
+   * Wrapped in useCallback for stable reference
+   */
+  const handleDismissToast = useCallback((deletionId: string) => {
+    handlePermanentDelete(deletionId);
+  }, [handlePermanentDelete]);
+
   // Filter agreements
   const filteredAgreements = agreements.filter((a) => {
     const matchesStatus = filterStatus === "all" || a.status === filterStatus;
@@ -131,13 +230,13 @@ export default function Agreements() {
     return (
       <div className="flex h-full">
         {/* Left Panel Skeleton */}
-        <div className="w-80 bg-(--color-surface) border-r border-(--color-border) flex-col">
-          <div className="p-4 border-b border-(--color-border)">
+        <div className="w-80 flex-shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+          <div className="p-4 border-b border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-4">
-              <div className="h-6 w-24 bg-(--color-surface-alt)ded animate-pulse" />
-              <div className="h-8 w-8 bg-(--color-surface-alt) rounded-lg animate-pulse" />
+              <div className="h-6 w-24 bg-[var(--color-surface-alt)] rounded animate-pulse" />
+              <div className="h-8 w-8 bg-[var(--color-surface-alt)] rounded-lg animate-pulse" />
             </div>
-            <div className="h-10 bg-(--color-surface-alt) rounded-lg animate-pulse mb-3" />
+            <div className="h-10 bg-[var(--color-surface-alt)] rounded-lg animate-pulse mb-3" />
             <div className="flex gap-2">
               <div className="flex-1 h-8 bg-[var(--color-surface-alt)] rounded-lg animate-pulse" />
               <div className="flex-1 h-8 bg-[var(--color-surface-alt)] rounded-lg animate-pulse" />
@@ -191,7 +290,7 @@ export default function Agreements() {
   return (
     <div className="flex h-full">
       {/* Left Panel - Agreement List */}
-      <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+      <div className="w-80 flex-shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-4">
@@ -281,12 +380,7 @@ export default function Agreements() {
                 agreement={agreement}
                 isSelected={selectedAgreementId === agreement.id}
                 onClick={() => setSelectedAgreementId(agreement.id)}
-                onDelete={async (agreementId) => {
-                  const res = await deleteAgreement(agreementId);
-                  if (res.success) {
-                    console.log('Deleted:', res.deleted?.title);
-                  }
-                }}
+                onDelete={handleDeleteAgreement}
               />
             ))
           )}
@@ -325,6 +419,20 @@ export default function Agreements() {
         isSubmitting={isCreating}
         error={createError}
       />
+
+      {/* Stacked Undo Toasts for Multi-Delete */}
+      {pendingDeletions.map((deletion, index) => (
+        <UndoToast
+          key={deletion.id}
+          id={deletion.id}
+          message={`Deleted "${deletion.agreement.title}"`}
+          duration={5000}
+          index={index}
+          onUndo={handleUndoDelete}
+          onDismiss={handleDismissToast}
+          onTimeout={handlePermanentDelete}
+        />
+      ))}
     </div>
   );
 }
