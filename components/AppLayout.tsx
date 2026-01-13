@@ -27,7 +27,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               duration: 0.3,
               ease: [0.22, 1, 0.36, 1],
             }}
-            className="min-h-[calc(100vh-4rem)]"
+            className="h-[calc(100vh-4rem)]"
           >
             {children}
           </motion.div>
