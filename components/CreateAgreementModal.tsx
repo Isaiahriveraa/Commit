@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, AlertCircle, Loader2 } from "lucide-react";
 
 type CreateAgreementModalProps = {
@@ -21,6 +21,15 @@ export default function CreateAgreementModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Reset form state whenever modal opens (ensures fresh form each time)
+  useEffect(() => {
+    if (isOpen) {
+      setTitle("");
+      setDescription("");
+      setLocalError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
