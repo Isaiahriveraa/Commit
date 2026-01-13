@@ -62,7 +62,23 @@ interface UseAgreementsResult {
     title: string;
     description: string;
   }) => Promise<{ success: boolean; error?: string; id?: string }>;
-  signAgreement: (agreementId: string) => Promise<{ success: boolean; error?: string }>;
+  signAgreement: (
+    agreementId: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  permanentlyDeleteAgreement: (
+    agreementId: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  deleteAgreement: (
+    agreementId: string
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    deleted?: AgreementWithSignatures;
+  }>;
+  restoreAgreement: (
+    agreement: AgreementWithSignatures,
+    originalIndex: number
+  ) => void;
   fetchSignatures: (agreementId: string) => Promise<SignatureDisplay[]>;
   hasUserSigned: (agreementId: string) => Promise<boolean>;
   refresh: () => Promise<void>;
@@ -76,6 +92,58 @@ export function useAgreements(): UseAgreementsResult {
   const [isCreating, setIsCreating] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const deleteAgreement = async (agreementId: string) => {
+    const agreementToDel = agreements.find((a) => a.id === agreementId);
+
+    //Edge case: Agreement not found
+    if (!agreementToDel) {
+      return {success: false, error: "Agreement not found!"};
+    }
+
+    //Remove the Agreement from the UI
+    setAgreements(prev => prev.filter(a => a.id !== agreementId));
+
+    return {success: true, deleted: agreementToDel};
+  };
+
+  /**
+   * Permanently delete an agreement from the database
+   * Called after undo timer expires
+   */
+  const permanentlyDeleteAgreement = async (agreementId: string) => {
+    //Delete from DB using Supabase
+    const { error: deleteError } = await supabase
+      .from('agreements')
+      .delete()
+      .eq('id', agreementId);
+
+    if (deleteError) {
+      return { success: false, error: deleteError.message };
+    }
+
+    return {success: true};
+  }
+
+  /**
+   * Restore a deleted agreement back to state (for undo functionality)
+   * No database call needed since agreement wasn't permanently deleted yet
+   * Guards against duplicates by checking if agreement already exists
+   */
+  const restoreAgreement = (agreement: AgreementWithSignatures, originalIndex: number) => {
+    setAgreements(prev => {
+      // Guard: Don't add if already exists (prevents duplicates)
+      if (prev.some(a => a.id === agreement.id)) {
+        return prev;
+      }
+
+      const newList = [...prev];
+      // Insert at original position, or at end if index is out of bounds
+      const insertIndex = Math.min(originalIndex, newList.length);
+      newList.splice(insertIndex, 0, agreement);
+      return newList;
+    });
+  };
 
   /**
    * Fetch all team members
@@ -92,6 +160,7 @@ export function useAgreements(): UseAgreementsResult {
 
     return (data as TeamMember[]) || [];
   }, []);
+
 
   /**
    * Fetch all agreements with signature counts
@@ -414,6 +483,9 @@ export function useAgreements(): UseAgreementsResult {
     error,
     createAgreement,
     signAgreement,
+    deleteAgreement,
+    permanentlyDeleteAgreement,
+    restoreAgreement,
     fetchSignatures,
     hasUserSigned,
     refresh,

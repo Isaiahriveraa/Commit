@@ -128,7 +128,7 @@ export default function Deliverables() {
     return (
       <div className="flex h-full">
         {/* Left Panel Skeleton */}
-        <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+        <div className="w-80 flex-shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
           <div className="p-4 border-b border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-4">
               <div className="h-6 w-28 bg-[var(--color-surface-alt)] rounded animate-pulse" />
@@ -191,7 +191,7 @@ export default function Deliverables() {
   return (
     <div className="flex h-full">
       {/* Left Panel - Deliverable List */}
-      <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+      <div className="w-80 flex-shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-4">

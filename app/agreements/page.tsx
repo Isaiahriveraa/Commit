@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, FileText, Search, AlertCircle, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Plus, FileText, Search, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import CreateAgreementModal from "@/components/CreateAgreementModal";
 import AgreementDetailPanel from "@/components/AgreementDetailPanel";
-import { useAgreements, type AgreementWithSignatures, type SignatureDisplay } from "@/hooks/useAgreements";
+import UndoToast from "@/components/UndoToast";
+import {
+  useAgreements,
+  type AgreementWithSignatures,
+  type SignatureDisplay,
+} from "@/hooks/useAgreements";
 
 type FilterStatus = "all" | "active" | "pending" | "archived";
 
@@ -17,11 +22,16 @@ export default function Agreements() {
     error,
     createAgreement,
     signAgreement,
+    deleteAgreement,
+    permanentlyDeleteAgreement,
+    restoreAgreement,
     fetchSignatures,
     hasUserSigned,
   } = useAgreements();
 
-  const [selectedAgreementId, setSelectedAgreementId] = useState<string | null>(null);
+  const [selectedAgreementId, setSelectedAgreementId] = useState<string | null>(
+    null
+  );
   const [signatures, setSignatures] = useState<SignatureDisplay[]>([]);
   const [userSigned, setUserSigned] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,6 +40,20 @@ export default function Agreements() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
   const [loadingSignatures, setLoadingSignatures] = useState(false);
+
+  // Pending deletions array for multi-undo functionality
+  // Each deletion has a unique ID for independent tracking
+  const [pendingDeletions, setPendingDeletions] = useState<Array<{
+    id: string; // Unique ID for this deletion event
+    agreement: AgreementWithSignatures;
+    originalIndex: number;
+  }>>([]);
+
+  // Ref to access pendingDeletions in callbacks without causing re-renders
+  const pendingDeletionsRef = useRef(pendingDeletions);
+  useEffect(() => {
+    pendingDeletionsRef.current = pendingDeletions;
+  }, [pendingDeletions]);
 
   // Set initial selected agreement when data loads
   useEffect(() => {
@@ -73,7 +97,10 @@ export default function Agreements() {
     };
   }, [selectedAgreementId, fetchSignatures, hasUserSigned]);
 
-  const handleCreateAgreement = async (data: { title: string; description: string }) => {
+  const handleCreateAgreement = async (data: {
+    title: string;
+    description: string;
+  }) => {
     setCreateError(null);
     const result = await createAgreement(data);
 
@@ -101,6 +128,89 @@ export default function Agreements() {
     }
   };
 
+  /**
+   * Handle delete with undo pattern:
+   * 1. Remove from UI immediately (optimistic)
+   * 2. Add to pending deletions array for multi-undo support
+   * 3. Show stacked undo toasts - permanent deletion happens on each timeout
+   */
+  const handleDeleteAgreement = async (agreementId: string) => {
+    // Find the agreement and its index before deletion
+    const index = agreements.findIndex((a) => a.id === agreementId);
+    if (index === -1) return;
+
+    const result = await deleteAgreement(agreementId);
+    if (result.success && result.deleted) {
+      // Generate unique ID for this deletion event
+      const deletionId = `del_${Date.now()}_${agreementId}`;
+
+      // Add to pending deletions array (supports multiple)
+      setPendingDeletions((prev) => [
+        ...prev,
+        {
+          id: deletionId,
+          agreement: result.deleted!,
+          originalIndex: index,
+        },
+      ]);
+
+      // If deleted agreement was selected, select next available
+      if (selectedAgreementId === agreementId) {
+        const remaining = agreements.filter((a) => a.id !== agreementId);
+        setSelectedAgreementId(remaining.length > 0 ? remaining[0].id : null);
+      }
+    }
+  };
+
+  /**
+   * Restore a specific deleted agreement (undo action)
+   * Takes deletion ID to support undoing any item in the stack
+   * Wrapped in useCallback for stable reference (prevents timer resets)
+   * Uses ref to read pendingDeletions without adding to dependencies
+   */
+  const handleUndoDelete = useCallback((deletionId: string) => {
+    // Find the deletion using ref (stable reference, no re-renders)
+    const deletion = pendingDeletionsRef.current.find((d) => d.id === deletionId);
+
+    if (deletion) {
+      // Restore agreement first (separate state update)
+      restoreAgreement(deletion.agreement, deletion.originalIndex);
+    }
+
+    // Then remove from pending array (separate state update)
+    setPendingDeletions((prev) => prev.filter((d) => d.id !== deletionId));
+  }, [restoreAgreement]);
+
+  /**
+   * Permanently delete a specific agreement when its undo timeout expires
+   * Wrapped in useCallback for stable reference (prevents timer resets)
+   * Uses ref to read pendingDeletions without adding to dependencies
+   */
+  const handlePermanentDelete = useCallback(async (deletionId: string) => {
+    // Find the deletion using ref (stable reference)
+    const deletion = pendingDeletionsRef.current.find((d) => d.id === deletionId);
+    const agreementId = deletion?.agreement.id;
+
+    // Remove from pending array
+    setPendingDeletions((prev) => prev.filter((d) => d.id !== deletionId));
+
+    // Perform the actual database deletion
+    if (agreementId) {
+      const result = await permanentlyDeleteAgreement(agreementId);
+      if (!result.success) {
+        console.error("Failed to permanently delete:", result.error);
+      }
+    }
+  }, [permanentlyDeleteAgreement]);
+
+  /**
+   * Dismiss a specific toast (same as letting it timeout)
+   * Wrapped in useCallback for stable reference
+   */
+  const handleDismissToast = useCallback((deletionId: string) => {
+    handlePermanentDelete(deletionId);
+  }, [handlePermanentDelete]);
+
   // Filter agreements
   const filteredAgreements = agreements.filter((a) => {
     const matchesStatus = filterStatus === "all" || a.status === filterStatus;
@@ -111,14 +221,16 @@ export default function Agreements() {
     return matchesStatus && matchesSearch;
   });
 
-  const selectedAgreement = agreements.find((a) => a.id === selectedAgreementId);
+  const selectedAgreement = agreements.find(
+    (a) => a.id === selectedAgreementId
+  );
 
   // Loading state
   if (isLoading) {
     return (
       <div className="flex h-full">
         {/* Left Panel Skeleton */}
-        <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+        <div className="w-80 flex-shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
           <div className="p-4 border-b border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-4">
               <div className="h-6 w-24 bg-[var(--color-surface-alt)] rounded animate-pulse" />
@@ -178,11 +290,13 @@ export default function Agreements() {
   return (
     <div className="flex h-full">
       {/* Left Panel - Agreement List */}
-      <div className="w-80 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+      <div className="w-80 flex-shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Agreements</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+              Agreements
+            </h2>
             <button
               onClick={() => setShowCreateModal(true)}
               className="p-2 bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]"
@@ -214,7 +328,7 @@ export default function Agreements() {
               className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "all"
                   ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary)]"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+                  : "text-(--color-text-secondary) hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               All
@@ -246,14 +360,14 @@ export default function Agreements() {
         <div className="flex-1 overflow-auto p-2">
           {filteredAgreements.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <FileText className="w-8 h-8 text-[var(--color-text-muted)] mb-2" />
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <FileText className="w-8 h-8 text-(--color-text-muted) mb-2" />
+              <p className="text-sm text-(--color-text-muted)">
                 {searchQuery ? "No agreements found" : "No agreements yet"}
               </p>
               {!searchQuery && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="mt-2 text-sm text-[var(--color-primary)] hover:underline"
+                  className="mt-2 text-sm text-(--color-primary) hover:underline"
                 >
                   Create your first agreement
                 </button>
@@ -266,6 +380,7 @@ export default function Agreements() {
                 agreement={agreement}
                 isSelected={selectedAgreementId === agreement.id}
                 onClick={() => setSelectedAgreementId(agreement.id)}
+                onDelete={handleDeleteAgreement}
               />
             ))
           )}
@@ -273,7 +388,7 @@ export default function Agreements() {
       </div>
 
       {/* Right Panel - Agreement Detail */}
-      <div className="flex-1 overflow-auto bg-[var(--color-bg)]">
+      <div className="flex-1 overflow-auto bg-(--color-bg)">
         {selectedAgreement ? (
           <AgreementDetailPanel
             agreement={selectedAgreement}
@@ -286,7 +401,9 @@ export default function Agreements() {
           />
         ) : (
           <div className="h-full flex items-center justify-center">
-            <p className="text-[var(--color-text-muted)]">Select an agreement to view details</p>
+            <p className="text-(--color-text-muted)">
+              Select an agreement to view details
+            </p>
           </div>
         )}
       </div>
@@ -302,6 +419,20 @@ export default function Agreements() {
         isSubmitting={isCreating}
         error={createError}
       />
+
+      {/* Stacked Undo Toasts for Multi-Delete */}
+      {pendingDeletions.map((deletion, index) => (
+        <UndoToast
+          key={deletion.id}
+          id={deletion.id}
+          message={`Deleted "${deletion.agreement.title}"`}
+          duration={5000}
+          index={index}
+          onUndo={handleUndoDelete}
+          onDismiss={handleDismissToast}
+          onTimeout={handlePermanentDelete}
+        />
+      ))}
     </div>
   );
 }
@@ -313,63 +444,92 @@ function AgreementListItem({
   agreement,
   isSelected,
   onClick,
+  onDelete,
 }: {
   agreement: AgreementWithSignatures;
   isSelected: boolean;
   onClick: () => void;
+  onDelete: (agreementId: string) => void;
 }) {
-  const progress = agreement.totalMembers > 0
-    ? Math.round((agreement.signedBy / agreement.totalMembers) * 100)
-    : 0;
+  
+  const [isHovered, setIsHovered] = useState(false);
+  const progress =
+    agreement.totalMembers > 0
+      ? Math.round((agreement.signedBy / agreement.totalMembers) * 100)
+      : 0;
 
   return (
-    <button
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       aria-label={`View agreement: ${agreement.title}, ${progress}% signed, status: ${agreement.status}`}
-      className={`w-full text-left p-3 rounded-xl mb-2 transition-all ${
+      className={`w-full text-left p-3 rounded-xl mb-2 transition-all cursor-pointer ${
         isSelected
-          ? "bg-[var(--color-primary-light)] border border-[var(--color-primary)] shadow-[var(--shadow-md)]"
-          : "border border-transparent hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border)]"
+          ? "bg-(--color-primary-light) border border-(--color-primary) shadow-(--shadow-md)"
+          : "border border-transparent hover:bg-(--color-surface-hover) hover:border-(--color-border)"
       }`}
     >
       <div className="flex items-start gap-2 mb-2">
         <div
           className={`p-1.5 rounded-lg ${
             agreement.status === "active"
-              ? "bg-[var(--color-success-light)]"
+              ? "bg-(--color-success-light)"
               : agreement.status === "pending"
-              ? "bg-[var(--color-warning-light)]"
-              : "bg-[var(--color-surface-alt)]"
+              ? "bg-(--color-warning-light)"
+              : "bg-(--color-surface-alt)"
           }`}
         >
           <FileText
             className={`w-3.5 h-3.5 ${
               agreement.status === "active"
-                ? "text-[var(--color-success)]"
+                ? "text-(--color-success)"
                 : agreement.status === "pending"
-                ? "text-[var(--color-warning)]"
-                : "text-[var(--color-text-muted)]"
+                ? "text=(--color-warning)]"
+                : "text-(--color-text-muted)"
             }`}
           />
         </div>
-        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] flex-1 leading-tight">
+        <h3 className="text-sm font-semibold text-(--color-text-primary) flex-1 leading-tight">
           {agreement.title}
         </h3>
+        {isHovered && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(agreement.id);
+            }}
+            className="p-1.5 rounded-lg text-(--color-text-muted) hover:bg-red-50 hover:text-red-600 transition-colors"
+            aria-label="Delete agreement"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <div className="pl-8">
-        <div className="relative h-1.5 bg-[var(--color-surface-alt)] rounded-full overflow-hidden mb-1.5">
+        <div className="relative h-1.5 bg-(--color-surface-alt) rounded-full overflow-hidden mb-1.5">
           <div
-            className="absolute inset-y-0 left-0 bg-[var(--color-primary)] rounded-full transition-all duration-300"
+            className="absolute inset-y-0 left-0 bg-(--color-primary) rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[var(--color-text-muted)]">
+          <span className="text-(--color-text-muted)">
             {agreement.signedBy}/{agreement.totalMembers} signed
           </span>
-          <span className="text-[var(--color-primary)] font-medium">{progress}%</span>
+          <span className="text-(--color-primary) font-medium">
+            {progress}%
+          </span>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
