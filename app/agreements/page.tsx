@@ -328,7 +328,7 @@ export default function Agreements() {
               className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterStatus === "all"
                   ? "bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-[var(--color-primary)]"
-                  : "text-(--color-text-secondary) hover:bg-[var(--color-surface-hover)]"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               }`}
             >
               All
@@ -360,14 +360,14 @@ export default function Agreements() {
         <div className="flex-1 overflow-auto p-2">
           {filteredAgreements.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <FileText className="w-8 h-8 text-(--color-text-muted) mb-2" />
-              <p className="text-sm text-(--color-text-muted)">
+              <FileText className="w-8 h-8 text-[var(--color-text-muted)] mb-2" />
+              <p className="text-sm text-[var(--color-text-muted)]">
                 {searchQuery ? "No agreements found" : "No agreements yet"}
               </p>
               {!searchQuery && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="mt-2 text-sm text-(--color-primary) hover:underline"
+                  className="mt-2 text-sm text-[var(--color-primary)] hover:underline"
                 >
                   Create your first agreement
                 </button>
@@ -388,7 +388,7 @@ export default function Agreements() {
       </div>
 
       {/* Right Panel - Agreement Detail */}
-      <div className="flex-1 overflow-auto bg-(--color-bg)">
+      <div className="flex-1 overflow-auto bg-[var(--color-bg)]">
         {selectedAgreement ? (
           <AgreementDetailPanel
             agreement={selectedAgreement}
@@ -474,31 +474,31 @@ function AgreementListItem({
       aria-label={`View agreement: ${agreement.title}, ${progress}% signed, status: ${agreement.status}`}
       className={`w-full text-left p-3 rounded-xl mb-2 transition-all cursor-pointer ${
         isSelected
-          ? "bg-(--color-primary-light) border border-(--color-primary) shadow-(--shadow-md)"
-          : "border border-transparent hover:bg-(--color-surface-hover) hover:border-(--color-border)"
+          ? "bg-[var(--color-primary-light)] border border-[var(--color-primary)] shadow-[var(--shadow-md)]"
+          : "border border-transparent hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border)]"
       }`}
     >
       <div className="flex items-start gap-2 mb-2">
         <div
           className={`p-1.5 rounded-lg ${
             agreement.status === "active"
-              ? "bg-(--color-success-light)"
+              ? "bg-[var(--color-success-light)]"
               : agreement.status === "pending"
-              ? "bg-(--color-warning-light)"
-              : "bg-(--color-surface-alt)"
+              ? "bg-[var(--color-warning-light)]"
+              : "bg-[var(--color-surface-alt)]"
           }`}
         >
           <FileText
             className={`w-3.5 h-3.5 ${
               agreement.status === "active"
-                ? "text-(--color-success)"
+                ? "text-[var(--color-success)]"
                 : agreement.status === "pending"
-                ? "text=(--color-warning)]"
-                : "text-(--color-text-muted)"
+                ? "text-[var(--color-warning)]"
+                : "text-[var(--color-text-muted)]"
             }`}
           />
         </div>
-        <h3 className="text-sm font-semibold text-(--color-text-primary) flex-1 leading-tight">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] flex-1 leading-tight">
           {agreement.title}
         </h3>
         {isHovered && (
@@ -507,7 +507,7 @@ function AgreementListItem({
               e.stopPropagation();
               onDelete(agreement.id);
             }}
-            className="p-1.5 rounded-lg text-(--color-text-muted) hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:bg-red-50 hover:text-red-600 transition-colors"
             aria-label="Delete agreement"
           >
             <Trash2 className="w-4 h-4" />
@@ -515,17 +515,17 @@ function AgreementListItem({
         )}
       </div>
       <div className="pl-8">
-        <div className="relative h-1.5 bg-(--color-surface-alt) rounded-full overflow-hidden mb-1.5">
+        <div className="relative h-1.5 bg-[var(--color-surface-alt)] rounded-full overflow-hidden mb-1.5">
           <div
-            className="absolute inset-y-0 left-0 bg-(--color-primary) rounded-full transition-all duration-300"
+            className="absolute inset-y-0 left-0 bg-[var(--color-primary)] rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-(--color-text-muted)">
+          <span className="text-[var(--color-text-muted)]">
             {agreement.signedBy}/{agreement.totalMembers} signed
           </span>
-          <span className="text-(--color-primary) font-medium">
+          <span className="text-[var(--color-primary)] font-medium">
             {progress}%
           </span>
         </div>

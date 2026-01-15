@@ -112,18 +112,24 @@ export function useAgreements(): UseAgreementsResult {
    * Called after undo timer expires
    */
   const permanentlyDeleteAgreement = async (agreementId: string) => {
-    //Delete from DB using Supabase
-    const { error: deleteError } = await supabase
+    // Delete from DB using Supabase and return deleted rows to verify existence
+    const { data: deletedAgreements, error: deleteError } = await supabase
       .from('agreements')
       .delete()
-      .eq('id', agreementId);
+      .eq('id', agreementId)
+      .select();
 
     if (deleteError) {
       return { success: false, error: deleteError.message };
     }
 
-    return {success: true};
-  }
+    // If no rows were deleted, the agreement did not exist
+    if (!deletedAgreements || deletedAgreements.length === 0) {
+      return { success: false, error: 'Agreement not found' };
+    }
+
+    return { success: true };
+  };
 
   /**
    * Restore a deleted agreement back to state (for undo functionality)
@@ -160,7 +166,7 @@ export function useAgreements(): UseAgreementsResult {
 
     return (data as TeamMember[]) || [];
   }, []);
-
+  
 
   /**
    * Fetch all agreements with signature counts
