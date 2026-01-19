@@ -1,26 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, ChevronDown } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+type Deliverable = {
+  id: string;
+  title: string;
+};
 
 type PostUpdateModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (update: { content: string; linkedDeliverable?: string }) => void;
+  onSubmit: (update: { content: string; deliverableId?: string; deliverableTitle?: string }) => void;
 };
 
 export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdateModalProps) {
   const [content, setContent] = useState("");
-  const [linkedDeliverable, setLinkedDeliverable] = useState("");
+  const [selectedDeliverableId, setSelectedDeliverableId] = useState("");
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
+  const [isLoadingDeliverables, setIsLoadingDeliverables] = useState(false);
+
+  // Fetch deliverables when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchDeliverables();
+    }
+  }, [isOpen]);
+
+  const fetchDeliverables = async () => {
+    setIsLoadingDeliverables(true);
+    const { data, error } = await supabase
+      .from("deliverables")
+      .select("id, title")
+      .order("title");
+
+    if (!error && data) {
+      setDeliverables(data);
+    }
+    setIsLoadingDeliverables(false);
+  };
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (content.trim()) {
-      onSubmit({ content, linkedDeliverable: linkedDeliverable || undefined });
+      const selectedDeliverable = deliverables.find(d => d.id === selectedDeliverableId);
+      onSubmit({
+        content,
+        deliverableId: selectedDeliverableId || undefined,
+        deliverableTitle: selectedDeliverable?.title,
+      });
       setContent("");
-      setLinkedDeliverable("");
+      setSelectedDeliverableId("");
       onClose();
     }
   };
@@ -52,13 +85,25 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
             <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
               Link to Deliverable (optional)
             </label>
-            <input
-              type="text"
-              value={linkedDeliverable}
-              onChange={(e) => setLinkedDeliverable(e.target.value)}
-              placeholder="e.g., User Authentication System"
-              className="w-full px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] outline-none transition-all"
-            />
+            <div className="relative">
+              <select
+                value={selectedDeliverableId}
+                onChange={(e) => setSelectedDeliverableId(e.target.value)}
+                disabled={isLoadingDeliverables}
+                className="w-full px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] outline-none transition-all appearance-none cursor-pointer disabled:opacity-50"
+              >
+                <option value="">Select a deliverable...</option>
+                {deliverables.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.title}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)] pointer-events-none" />
+            </div>
+            {isLoadingDeliverables && (
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">Loading deliverables...</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">
