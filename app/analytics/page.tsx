@@ -2,8 +2,9 @@
 
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { Area, AreaChart, CartesianGrid, PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Activity, AlertTriangle, ArrowUpRight, Calendar, Crown, LayoutDashboard, Loader2, TrendingUp } from "lucide-react";
+import { getInitials } from "@/lib/utils";
 
 // Avatar color palette - consistent colors based on name
 const AVATAR_COLORS = [
@@ -18,30 +19,6 @@ const AVATAR_COLORS = [
 ];
 
 /**
- * Function extracts initials from a name
- *
- * Requirements:
- * - Extract up to 2 initials from a person's name
- * - Should handle single names (e.g., "John" -> "J")
- * - Should handle full names (e.g., "John Doe" -> "JD")
- * - Should handle multiple names (e.g., "John William Doe" -> "JD" using first and last)
- * - Should return uppercase initials
- *
- * @param name - The person's full name
- * @returns 1-2 character string of initials (uppercase)
- */
-function getInitials(name: string): string {
-  const names = name.split(" ");
-  const first = names[0].charAt(0).toUpperCase();
-  const last = names[names.length - 1].charAt(0).toUpperCase();
-
-  if (names.length === 1) {
-    return first;
-  }
-  return `${first}${last}`;
-}
-
-/**
  * Generate a consistent color class based on the name
  * Uses a simple hash to always give the same person the same color
  */
@@ -51,7 +28,7 @@ function getAvatarColor(name: string): string {
 }
 
 // Animation variants
-const containerVariants: any = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -61,7 +38,7 @@ const containerVariants: any = {
   },
 };
 
-const itemVariants: any = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
@@ -140,10 +117,7 @@ export default function Analytics() {
               <h3 className="text-3xl font-bold text-gray-900">{metrics.totalDeliverables}</h3>
             </div>
             <div className="mt-4 flex items-center gap-2 text-sm">
-              <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full text-xs font-medium">
-                <TrendingUp className="w-3 h-3" /> +12%
-              </span>
-              <span className="text-gray-400 text-xs">vs last month</span>
+              <span className="text-gray-400 text-xs">Total projects</span>
             </div>
           </motion.div>
 
@@ -178,10 +152,7 @@ export default function Analytics() {
               <h3 className="text-3xl font-bold text-gray-900">{metrics.updatesThisWeek}</h3>
             </div>
             <div className="mt-4 flex items-center gap-2 text-sm">
-              <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full text-xs font-medium">
-                <TrendingUp className="w-3 h-3" /> +5%
-              </span>
-              <span className="text-gray-400 text-xs">activity</span>
+              <span className="text-gray-400 text-xs">Recent activity</span>
             </div>
           </motion.div>
 
@@ -325,9 +296,6 @@ export default function Analytics() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pt-8 pointer-events-none">
                 <span className="text-4xl font-bold text-gray-900">{efficiency}%</span>
-                <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-xs font-bold mt-1">
-                  <TrendingUp className="w-3 h-3" /> +{Math.round(efficiency * 0.1)}%
-                </div>
                 <span className="text-xs text-gray-400 mt-2">Team Efficiency</span>
               </div>
             </div>
@@ -379,7 +347,7 @@ export default function Analytics() {
                           <div className="font-medium text-gray-900">{member.memberName}</div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-sm text-gray-500">{idx === 0 ? "Lead" : "Developer"}</td>
+                      <td className="py-4 px-4 text-sm text-gray-500">{member.role}</td>
                       <td className="py-4 px-4 font-medium text-gray-900">{member.deliverableCount}</td>
                       <td className="py-4 px-4">
                         <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MessageSquare, Heart, ThumbsUp, AlertCircle, Loader2 } from "lucide-react";
 import PostUpdateModal from "@/components/PostUpdateModal";
 import { supabase } from "@/lib/supabase";
+import { getInitials, formatRelativeTime } from "@/lib/utils";
 
 type UpdateWithDetails = {
   id: string;
@@ -17,37 +18,13 @@ type UpdateWithDetails = {
   isHelpRequest?: boolean;
 };
 
-// Helper to get initials from name
-function getInitials(name: string): string {
-  const names = name.split(" ");
-  const first = names[0]?.charAt(0).toUpperCase() || "?";
-  const last = names[names.length - 1]?.charAt(0).toUpperCase() || "";
-  if (names.length === 1) return first;
-  return `${first}${last}`;
-}
-
-// Helper to format relative time
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  return date.toLocaleDateString();
-}
-
 export default function Updates() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updates, setUpdates] = useState<UpdateWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPosting, setIsPosting] = useState(false);
+  
+  // Note: isPosting could be used to show a loading state on the "New Post" button if we moved it inside the modal
+  // or added an overlay. For now we just await the modal submission.
 
   // Fetch updates from Supabase on mount
   useEffect(() => {
@@ -99,8 +76,6 @@ export default function Updates() {
   };
 
   const handlePostUpdate = async (update: { content: string; deliverableId?: string; deliverableTitle?: string }) => {
-    setIsPosting(true);
-
     // Get the first team member as author (in a real app, this would be the logged-in user)
     const { data: members } = await supabase.from("team_members").select("id").limit(1);
     const authorId = members?.[0]?.id || null;
@@ -115,13 +90,11 @@ export default function Updates() {
 
     if (error) {
       console.error("Error posting update:", error);
-      setIsPosting(false);
       return;
     }
 
     // Refresh the updates list
     await fetchUpdates();
-    setIsPosting(false);
     setIsModalOpen(false);
   };
 

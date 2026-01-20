@@ -51,6 +51,7 @@ export interface StatusDistribution {
 export interface MemberWorkload {
   memberId: string;
   memberName: string;
+  role: string;
   deliverableCount: number;
   atRiskCount: number;
   completedCount: number;
@@ -272,6 +273,7 @@ export function useAnalytics(): UseAnalyticsResult {
       return {
         memberId: member.id,
         memberName: member.name,
+        role: member.role,
         deliverableCount: memberDeliverables.length,
         atRiskCount: memberDeliverables.filter(d => d.status === 'at-risk').length,
         completedCount: memberDeliverables.filter(d => d.status === 'completed').length,

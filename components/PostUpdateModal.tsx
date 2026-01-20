@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -22,13 +22,7 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
   const [isLoadingDeliverables, setIsLoadingDeliverables] = useState(false);
 
   // Fetch deliverables when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchDeliverables();
-    }
-  }, [isOpen]);
-
-  const fetchDeliverables = async () => {
+  const fetchDeliverables = useCallback(async () => {
     setIsLoadingDeliverables(true);
     const { data, error } = await supabase
       .from("deliverables")
@@ -39,7 +33,13 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
       setDeliverables(data);
     }
     setIsLoadingDeliverables(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDeliverables();
+    }
+  }, [isOpen, fetchDeliverables]);
 
   if (!isOpen) return null;
 
@@ -57,6 +57,8 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
       onClose();
     }
   };
+
+  const isSubmitDisabled = !content.trim();
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -116,7 +118,12 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[var(--color-primary)] rounded-lg text-white font-medium hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]"
+              disabled={isSubmitDisabled}
+              className={`px-4 py-2 rounded-lg text-white font-medium transition-all shadow-[var(--shadow-sm)] ${
+                isSubmitDisabled 
+                  ? "bg-gray-400 cursor-not-allowed opacity-50" 
+                  : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+              }`}
             >
               Post Update
             </button>
