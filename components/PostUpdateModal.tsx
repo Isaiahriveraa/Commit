@@ -1,29 +1,64 @@
 "use client";
 
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { X, ChevronDown } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+type Deliverable = {
+  id: string;
+  title: string;
+};
 
 type PostUpdateModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (update: { content: string; linkedDeliverable?: string }) => void;
+  onSubmit: (update: { content: string; deliverableId?: string; deliverableTitle?: string }) => void;
 };
 
 export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdateModalProps) {
   const [content, setContent] = useState("");
-  const [linkedDeliverable, setLinkedDeliverable] = useState("");
+  const [selectedDeliverableId, setSelectedDeliverableId] = useState("");
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
+  const [isLoadingDeliverables, setIsLoadingDeliverables] = useState(false);
+
+  // Fetch deliverables when modal opens
+  const fetchDeliverables = useCallback(async () => {
+    setIsLoadingDeliverables(true);
+    const { data, error } = await supabase
+      .from("deliverables")
+      .select("id, title")
+      .order("title");
+
+    if (!error && data) {
+      setDeliverables(data);
+    }
+    setIsLoadingDeliverables(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDeliverables();
+    }
+  }, [isOpen, fetchDeliverables]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (content.trim()) {
-      onSubmit({ content, linkedDeliverable: linkedDeliverable || undefined });
+      const selectedDeliverable = deliverables.find(d => d.id === selectedDeliverableId);
+      onSubmit({
+        content,
+        deliverableId: selectedDeliverableId || undefined,
+        deliverableTitle: selectedDeliverable?.title,
+      });
       setContent("");
-      setLinkedDeliverable("");
+      setSelectedDeliverableId("");
       onClose();
     }
   };
+
+  const isSubmitDisabled = !content.trim();
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -52,13 +87,25 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
             <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
               Link to Deliverable (optional)
             </label>
-            <input
-              type="text"
-              value={linkedDeliverable}
-              onChange={(e) => setLinkedDeliverable(e.target.value)}
-              placeholder="e.g., User Authentication System"
-              className="w-full px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] outline-none transition-all"
-            />
+            <div className="relative">
+              <select
+                value={selectedDeliverableId}
+                onChange={(e) => setSelectedDeliverableId(e.target.value)}
+                disabled={isLoadingDeliverables}
+                className="w-full px-4 py-3 bg-[var(--color-surface-alt)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary-light)] outline-none transition-all appearance-none cursor-pointer disabled:opacity-50"
+              >
+                <option value="">Select a deliverable...</option>
+                {deliverables.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.title}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)] pointer-events-none" />
+            </div>
+            {isLoadingDeliverables && (
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">Loading deliverables...</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">
@@ -71,7 +118,12 @@ export default function PostUpdateModal({ isOpen, onClose, onSubmit }: PostUpdat
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[var(--color-primary)] rounded-lg text-white font-medium hover:bg-[var(--color-primary-hover)] transition-all shadow-[var(--shadow-sm)]"
+              disabled={isSubmitDisabled}
+              className={`px-4 py-2 rounded-lg text-white font-medium transition-all shadow-[var(--shadow-sm)] ${
+                isSubmitDisabled 
+                  ? "bg-gray-400 cursor-not-allowed opacity-50" 
+                  : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+              }`}
             >
               Post Update
             </button>

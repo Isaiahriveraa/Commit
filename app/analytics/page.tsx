@@ -1,230 +1,377 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { TrendingUp, Users, Clock, AlertTriangle } from "lucide-react";
-import { useThemeColors } from "@/lib/useThemeColors";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { Area, AreaChart, CartesianGrid, PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { motion, Variants } from "framer-motion";
+import { Activity, AlertTriangle, ArrowUpRight, Calendar, Crown, LayoutDashboard, Loader2, TrendingUp } from "lucide-react";
+import { getInitials } from "@/lib/utils";
+
+// Avatar color palette - consistent colors based on name
+const AVATAR_COLORS = [
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-violet-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+  'bg-indigo-500',
+  'bg-teal-500',
+];
+
+/**
+ * Generate a consistent color class based on the name
+ * Uses a simple hash to always give the same person the same color
+ */
+function getAvatarColor(name: string): string {
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+// Animation variants
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 50 }
+  },
+};
 
 export default function Analytics() {
-  const colors = useThemeColors();
+  const { metrics, isLoading, error } = useAnalytics();
 
-  // Workload data per team member
-  const workloadData = [
-    { name: "Sarah C.", tasks: 8, hours: 32, label: "Sarah Chen" },
-    { name: "Mike R.", tasks: 12, hours: 45, label: "Mike Ross" },
-    { name: "Emma W.", tasks: 6, hours: 24, label: "Emma Wilson" },
-    { name: "Alex K.", tasks: 10, hours: 38, label: "Alex Kim" },
-    { name: "Jordan L.", tasks: 5, hours: 20, label: "Jordan Lee" },
-    { name: "Taylor M.", tasks: 9, hours: 35, label: "Taylor Martinez" },
-    { name: "Casey B.", tasks: 7, hours: 28, label: "Casey Brown" },
-    { name: "Morgan D.", tasks: 11, hours: 42, label: "Morgan Davis" },
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+      </div>
+    );
+  }
+
+  if (error || !metrics) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center text-center">
+        <AlertTriangle className="h-12 w-12 text-[var(--color-error)] mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Failed to load analytics</h2>
+        <p className="text-[var(--color-text-secondary)]">{error || "No data available"}</p>
+      </div>
+    );
+  }
+
+  // Transform daily activity for chart (using last 14 days)
+  // dailyActivity is ordered oldest→newest, so slice(-14) gets the most recent 14 days
+  const activityTrendData = metrics.dailyActivity
+    .slice(-14)
+    .map(d => ({
+      date: new Date(d.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+      updates: d.count
+    }));
+
+  // Check if there's any activity data to display
+  const hasActivityData = activityTrendData.some(d => d.updates > 0);
+
+  // Calculate total activities from the chart data
+  const totalActivities = activityTrendData.reduce((sum, d) => sum + d.updates, 0);
+
+  // Efficiency Data for Radial Bar
+  const efficiency = metrics.totalDeliverables > 0 ? Math.round((metrics.completedCount / metrics.totalDeliverables) * 100) : 0;
+  const radialData = [
+    { name: 'Completed', value: efficiency, fill: 'var(--color-primary)' },
   ];
-
-  // Task distribution by status - uses theme colors
-  const taskStatusData = [
-    { name: "Completed", value: 34, color: colors.success },
-    { name: "In Progress", value: 28, color: colors.info },
-    { name: "Blocked", value: 8, color: colors.error },
-    { name: "Not Started", value: 18, color: colors.textMuted },
-  ];
-
-  // Weekly workload trend
-  const weeklyTrend = [
-    { week: "Week 1", hours: 180, tasks: 42 },
-    { week: "Week 2", hours: 220, tasks: 56 },
-    { week: "Week 3", hours: 265, tasks: 68 },
-    { week: "Week 4", hours: 240, tasks: 62 },
-  ];
-
-  const stats = [
-    { label: "Avg Hours/Person", value: "33.5", icon: Clock, bgColor: "bg-[var(--color-info-light)]", iconColor: "text-[var(--color-info)]", trend: "+5.2%" },
-    { label: "Total Active Tasks", value: "88", icon: TrendingUp, bgColor: "bg-[var(--color-success-light)]", iconColor: "text-[var(--color-success)]", trend: "+12%" },
-    { label: "Team Members", value: "8", icon: Users, bgColor: "bg-[var(--color-primary-light)]", iconColor: "text-[var(--color-primary)]", trend: "0%" },
-    { label: "At Risk Tasks", value: "8", icon: AlertTriangle, bgColor: "bg-[var(--color-error-light)]", iconColor: "text-[var(--color-error)]", trend: "-3%" },
-  ];
-
-  // Tooltip styles for light theme
-  const tooltipStyle = {
-    backgroundColor: colors.surface,
-    border: `1px solid ${colors.border}`,
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-50/50 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Workload Analytics</h1>
-        <p className="text-[var(--color-text-secondary)] mt-2">Team capacity and task distribution insights</p>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-1">Track your team's performance and activity</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.bgColor} p-3 rounded-xl`}>
-                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
-                </div>
-                <span
-                  className={`text-sm font-medium ${
-                    stat.trend.startsWith("+") ? "text-[var(--color-success)]" : stat.trend.startsWith("-") ? "text-[var(--color-error)]" : "text-[var(--color-text-muted)]"
-                  }`}
-                >
-                  {stat.trend}
-                </span>
+      <motion.div
+        className="space-y-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+
+        {/* Top Row: KPI Cards (Veselty Style - Minimalist) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card 1 */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-medium">Total Deliverables</span>
+              <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-orange-50 transition-colors">
+                <LayoutDashboard className="w-5 h-5 text-gray-400 group-hover:text-[var(--color-primary)]" />
               </div>
-              <p className="text-sm text-[var(--color-text-secondary)]">{stat.label}</p>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-1">{stat.value}</p>
             </div>
-          );
-        })}
-      </div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-bold text-gray-900">{metrics.totalDeliverables}</h3>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <span className="text-gray-400 text-xs">Total projects</span>
+            </div>
+          </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Workload Histogram */}
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6">Workload Distribution (Hours)</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={workloadData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-              <XAxis dataKey="name" stroke={colors.textSecondary} fontSize={12} />
-              <YAxis stroke={colors.textSecondary} fontSize={12} />
-              <Tooltip
-                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-                contentStyle={tooltipStyle}
-                labelStyle={{ color: colors.textPrimary, fontWeight: 500 }}
-                itemStyle={{ color: colors.textSecondary }}
-              />
-              <Legend />
-              <Bar dataKey="hours" fill={colors.primary} name="Hours Allocated" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {/* Card 2 */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-medium">Active Tasks</span>
+              <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-orange-50 transition-colors">
+                <Activity className="w-5 h-5 text-gray-400 group-hover:text-[var(--color-primary)]" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-bold text-gray-900">{metrics.inProgressCount}</h3>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <span className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                <div className="h-full bg-[var(--color-primary)] w-[60%] rounded-full"></div>
+              </span>
+              <span className="text-gray-400 text-xs whitespace-nowrap">Capacity</span>
+            </div>
+          </motion.div>
+
+          {/* Card 3 */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-gray-500 text-sm font-medium">Updates (Week)</span>
+              <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-orange-50 transition-colors">
+                <Calendar className="w-5 h-5 text-gray-400 group-hover:text-[var(--color-primary)]" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-bold text-gray-900">{metrics.updatesThisWeek}</h3>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <span className="text-gray-400 text-xs">Recent activity</span>
+            </div>
+          </motion.div>
+
+          {/* Card 4 - Efficiency Pulse */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+            <div className="flex justify-between items-center h-full">
+              <div>
+                <span className="text-gray-500 text-sm font-medium block mb-1">Efficiency</span>
+                <h3 className="text-3xl font-bold text-gray-900">{efficiency}%</h3>
+                <span className="text-xs text-gray-400 mt-1 block">Completion rate</span>
+              </div>
+              <div className="w-16 h-16 rounded-full border-4 border-orange-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white">
+                  <ArrowUpRight className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Task Status Distribution */}
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6">Task Status Distribution</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={taskStatusData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill={colors.primary}
-                dataKey="value"
-              >
-                {taskStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={tooltipStyle}
-                labelStyle={{ color: colors.textPrimary }}
-                itemStyle={{ color: colors.textSecondary }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        {/* Middle Row: Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Activity Chart - Veselty Style */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-gray-900">Activity</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-2xl font-bold text-gray-900">{totalActivities}</span>
+                <span className="bg-orange-100 text-[var(--color-primary)] text-xs font-bold px-2 py-0.5 rounded">Total activities</span>
+              </div>
+            </div>
+
+            <div className="h-[320px] w-full">
+              {hasActivityData ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityTrendData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+                    <defs>
+                      {/* Veselty Style: Diagonal stripes pattern */}
+                      <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                        <line x1="0" y1="0" x2="0" y2="8" stroke="#F97316" strokeWidth="2" strokeOpacity="0.15" />
+                      </pattern>
+                      {/* Gradient for depth */}
+                      <linearGradient id="orangeGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#F97316" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#F97316" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 500 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: '#F97316', strokeWidth: 2, strokeDasharray: '4 4' }}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const value = payload[0].value as number;
+                          return (
+                            <div className="bg-gray-800 text-white px-4 py-3 rounded-xl shadow-lg">
+                              <p className="text-gray-400 text-xs mb-1">{label}</p>
+                              <p className="text-orange-400 font-bold text-lg">
+                                {value} {value === 1 ? 'activity' : 'activities'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    {/* Gradient fill layer */}
+                    <Area
+                      type="monotone"
+                      dataKey="updates"
+                      stroke="transparent"
+                      fillOpacity={1}
+                      fill="url(#orangeGradient)"
+                    />
+                    {/* Stripes overlay + stroke */}
+                    <Area
+                      type="monotone"
+                      dataKey="updates"
+                      stroke="#F97316"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#orangeStripes)"
+                      activeDot={{
+                        r: 8,
+                        strokeWidth: 4,
+                        stroke: '#fff',
+                        fill: '#F97316',
+                      }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <Activity className="w-12 h-12 text-gray-300 mb-3" />
+                  <p className="text-gray-500 font-medium">No activity yet</p>
+                  <p className="text-gray-400 text-sm mt-1">Updates will appear here as your team logs progress</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Efficiency Radial Chart */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center relative">
+            <div className="absolute top-6 left-6 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-gray-900">Performance</h2>
+              <div className="w-4 h-4 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">i</div>
+            </div>
+
+            <div className="w-full h-[250px] mt-8 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="60%"
+                  outerRadius="80%"
+                  barSize={20}
+                  data={radialData}
+                  startAngle={180}
+                  endAngle={0}
+                >
+                  <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                  <RadialBar
+                    background={{ fill: '#F3F4F6' }}
+                    dataKey="value"
+                    cornerRadius={10}
+                    fill="var(--color-primary)" // Orange fill
+                  />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pt-8 pointer-events-none">
+                <span className="text-4xl font-bold text-gray-900">{efficiency}%</span>
+                <span className="text-xs text-gray-400 mt-2">Team Efficiency</span>
+              </div>
+            </div>
+
+            <div className="w-full mt-auto pt-4 border-t border-gray-100">
+              <div className="flex justify-between items-center text-sm py-2">
+                <span className="text-gray-500">Avg. Daily Output</span>
+                <span className="font-bold text-gray-900">12 tasks</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </div>
 
-      {/* Task Count per Person */}
-      <div className="card p-6 mb-6">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6">Task Count by Team Member</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={workloadData}>
-            <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-            <XAxis dataKey="name" stroke={colors.textSecondary} fontSize={12} />
-            <YAxis stroke={colors.textSecondary} fontSize={12} />
-            <Tooltip
-              cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-              contentStyle={tooltipStyle}
-            />
-            <Legend />
-            <Bar dataKey="tasks" fill={colors.success} name="Active Tasks" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+        {/* Bottom Row: Team Workload Reference Style */}
+        <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-6">Team Workload</h2>
 
-      {/* Weekly Trend */}
-      <div className="card p-6 mb-6">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6">Weekly Workload Trend</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={weeklyTrend}>
-            <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-            <XAxis dataKey="week" stroke={colors.textSecondary} fontSize={12} />
-            <YAxis yAxisId="left" orientation="left" stroke={colors.primary} fontSize={12} />
-            <YAxis yAxisId="right" orientation="right" stroke={colors.info} fontSize={12} />
-            <Tooltip
-              cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-              contentStyle={tooltipStyle}
-            />
-            <Legend />
-            <Bar yAxisId="left" dataKey="hours" fill={colors.primary} name="Total Hours" radius={[4, 4, 0, 0]} />
-            <Bar yAxisId="right" dataKey="tasks" fill={colors.info} name="Total Tasks" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Team Member Details Table */}
-      <div className="card p-6">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Team Workload Details</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]">
-                <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Team Member</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Active Tasks</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Hours Allocated</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Capacity</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workloadData.map((member, idx) => {
-                const capacity = (member.hours / 40) * 100;
-                return (
-                  <tr key={idx} className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                    <td className="py-3 px-4 text-sm font-medium text-[var(--color-text-primary)]">{member.label}</td>
-                    <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">{member.tasks}</td>
-                    <td className="py-3 px-4 text-sm text-[var(--color-text-secondary)]">{member.hours}h</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-[var(--color-surface-alt)] rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              capacity > 100 ? "bg-[var(--color-error)]" : capacity > 80 ? "bg-[var(--color-warning)]" : "bg-[var(--color-success)]"
-                            }`}
-                            style={{ width: `${Math.min(capacity, 100)}%` }}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase rounded-l-lg">Team Member</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Role</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Tasks</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase w-1/3">Capacity</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase rounded-r-lg">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {metrics.memberWorkloads.slice(0, 5).map((member, idx) => {
+                  const load = Math.min((member.deliverableCount / 8) * 100, 100);
+                  return (
+                    <tr key={member.memberId} className="group hover:bg-orange-50/30 transition-colors">
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div
+                              className={`w-10 h-10 rounded-full ${getAvatarColor(member.memberName)} flex items-center justify-center text-white font-semibold text-sm`}
+                              title={member.memberName}
+                            >
+                              {getInitials(member.memberName)}
+                            </div>
+                            {idx === 0 && (
+                              <div className="absolute -top-1 -right-1 bg-yellow-400 text-white p-0.5 rounded-full border-2 border-white">
+                                <Crown className="w-2.5 h-2.5 fill-current" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="font-medium text-gray-900">{member.memberName}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-500">{member.role}</td>
+                      <td className="py-4 px-4 font-medium text-gray-900">{member.deliverableCount}</td>
+                      <td className="py-4 px-4">
+                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${load}%` }}
+                            transition={{ duration: 1 }}
+                            className={`h-full rounded-full ${load > 85 ? 'bg-red-500' : 'bg-[var(--color-primary)]'}`}
                           />
                         </div>
-                        <span className="text-sm text-[var(--color-text-secondary)]">{capacity.toFixed(0)}%</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          capacity > 100
-                            ? "bg-[var(--color-error-light)] text-[var(--color-error)]"
-                            : capacity > 80
-                            ? "bg-[var(--color-warning-light)] text-[var(--color-warning)]"
-                            : "bg-[var(--color-success-light)] text-[var(--color-success)]"
-                        }`}
-                      >
-                        {capacity > 100 ? "Overloaded" : capacity > 80 ? "Near Capacity" : "Available"}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${load > 85 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                          {load > 85 ? 'Overloaded' : 'Healthy'}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
